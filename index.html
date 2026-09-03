@@ -223,7 +223,7 @@ td.wide{white-space:pre-wrap;font-size:12.5px;max-width:320px;font-variant-numer
     <button class="btn ghost" id="allTime">All dates</button>
     <button class="btn" id="refresh">Refresh</button>
     <button class="btn ghost" id="toggleSetup">Sheets</button>
-    <span id="status">Snapshot · 3 Sep 2026</span>
+    <span id="status">Snapshot · 3 Sep, 10:45 AM</span>
   </div>
 </div>
 
@@ -270,13 +270,14 @@ Payment plan was offered to Omar and Malika; both still politely declined.
 Maybe need to show them more value of the program, so they feel dumb saying no. 
 
 "
-Ali,2026-09-01,3,2,0,1,2,2,0,1,1,2000,8000,7,None,"Nothing today, one who didn’t close is highly qualified used to paying $25k for masterclasses, said he’d be interested in VIP in a few months time, but said he’d be willing to pay for velocity tomorrow; said he didn’t have his card with him. "
-Ali,2026-09-02,2,1,0,1,1,1,0,1,0,7500,7500,8,None,.`;
+Ali,2026-09-01,3,2,0,1,2,2,0,2,1,2000,8000,7,None,"Nothing today, one who didn’t close is highly qualified used to paying $25k for masterclasses, said he’d be interested in VIP in a few months time, but said he’d be willing to pay for velocity tomorrow; said he didn’t have his card with him. "
+Ali,2026-09-02,2,1,0,1,1,1,0,1,0,9500,15500,8,None,.`;
 
 const SNAPSHOT_SETTER = `Setter Name (Your Name),Date of EOD,Dials,Connections,Qualified Conversations,Sets,Calls on Calendar,Showed Calls,Closed Set,Cash Collected,Total Revenue,Rate Today,What Objections Are Coming Up That Are Preventing Sets,Notes From Today
-Cal,2026-08-31,50,6,6,1,0,1,1,7500,7500,7,Uncertainty,Alexis McCabe 
+Cal,2026-08-31,50,6,6,7,0,1,1,7500,7500,7,Uncertainty,Alexis McCabe 
 Cal,2026-08-31,100,3,0,0,5,5,0,0,0,6,Not Educated enough,N/a
-Cal,2026-09-01,15,2,0,0,3,3,1,2000,8000,5,None,Was travelling so couldn’t really dial but back home and fully ready today `;
+Cal,2026-09-01,15,2,0,4,3,3,1,2000,8000,5,None,Was travelling so couldn’t really dial but back home and fully ready today 
+Cal,2026-09-02,80,7,3,3,1,1,1,9500,15500,7,Not Educated enough,"Jasmin hafid, tried to pitch os lite to her on call. Didn’t work but she’s open to getting on with Ali to discuss it which I think he could easily close her on, if she just has someone explain the logistics better "`;
 
 const SNAPSHOT_POST = `Submission ID,Respondent ID,Submitted at,Closer,Lead Email (Must Match One In CRM),"Give a brief summary of the call (What they were hoping to get out of this, what was stopping them)And give the outcome (Example: Ended in a fear objection that I couldn't solve, etc)(Please be as detailed as possible)*",Did you make an offer?,What is the lead status?,Cash collected,Total Revenue ,Call Recording
 J1oVAk7,EkeZWM4,2026-08-28 20:42:27,Ali,aymanshoeib18@gmail.com,fsdfsdfsdfsd,TRUE,Closed,5000,5000,https://meet.google.com/home
@@ -540,7 +541,7 @@ function funnel(steps){
 const KEY = "locumos_state_v2";
 const S = {
   closer:[], setter:[], post:[], tab:"team",
-  from:"", to:"", closerPick:"All", setterPick:"All", rangeTouched:false,
+  from:"", to:"", closerPick:"All", setterPick:"All", rangeTouched:false, live:false,
   urls:{closer:gviz(IDS.closer), setter:gviz(IDS.setter), post:gviz(IDS.post)}
 };
 function save(){
@@ -582,15 +583,30 @@ async function fetchCsv(url){
   if(t.trim().startsWith("<")) throw new Error("Got a web page, not CSV. Turn on link sharing for the sheets.");
   return t;
 }
+const LABEL = {closer:"Closer EOD", setter:"Setter EOD", post:"Post-call form"};
 async function loadLive(){
   setStatus("Loading…");
-  document.getElementById("dot").classList.add("pulse");
-  try{
-    const [c,s,p] = await Promise.all([fetchCsv(S.urls.closer), fetchCsv(S.urls.setter), fetchCsv(S.urls.post)]);
-    applyData(c,s,p);
-    setStatus("Live · " + new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}), "live");
-    save(); render();
-  }catch(err){ setStatus(err.message, "err"); }
+  const jobs = [["closer",S.urls.closer],["setter",S.urls.setter],["post",S.urls.post]];
+  const res = await Promise.allSettled(jobs.map(j => fetchCsv(j[1])));
+  const out = {closer:SNAPSHOT_CLOSER, setter:SNAPSHOT_SETTER, post:SNAPSHOT_POST};
+  const bad = [];
+  res.forEach((r,i) => {
+    if(r.status === "fulfilled") out[jobs[i][0]] = r.value;
+    else bad.push(LABEL[jobs[i][0]]);
+  });
+  applyData(out.closer, out.setter, out.post);
+  const t = new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+  if(bad.length === 3){
+    S.live = false;
+    setStatus("Can't reach any sheet — each one needs link sharing on. Showing the snapshot.", "err");
+  } else if(bad.length){
+    S.live = true;
+    setStatus("Live · " + t + " — " + bad.join(" and ") + " needs link sharing, using snapshot for it", "err");
+  } else {
+    S.live = true;
+    setStatus("Live · " + t, "live");
+  }
+  save(); render();
 }
 
 /* ================= render ================= */
@@ -883,8 +899,9 @@ document.getElementById("load").addEventListener("click", ()=>{
   save(); loadLive();
 });
 document.getElementById("reset").addEventListener("click", ()=>{
+  S.live = false;
   applyData(SNAPSHOT_CLOSER, SNAPSHOT_SETTER, SNAPSHOT_POST);
-  setStatus("Snapshot · 3 Sep 2026"); render();
+  setStatus("Snapshot · 3 Sep, 10:45 AM"); render();
 });
 let rt; window.addEventListener("resize", ()=>{
   clearTimeout(rt); rt=setTimeout(()=>{ moveInd(); (window._redraw||[]).forEach(f=>f()); }, 160);
@@ -892,7 +909,7 @@ let rt; window.addEventListener("resize", ()=>{
 document.addEventListener("visibilitychange", ()=>{
   if(document.visibilityState!=="visible") return;
   tick();
-  if(document.getElementById("status").classList.contains("live")) loadLive();
+  if(S.live) loadLive();
 });
 
 /* ================= boot ================= */
@@ -908,7 +925,7 @@ applyData(SNAPSHOT_CLOSER, SNAPSHOT_SETTER, SNAPSHOT_POST);
 render();
 requestAnimationFrame(moveInd);
 setTimeout(moveInd, 300);
-setInterval(()=>{ if(document.getElementById("status").classList.contains("live")) loadLive(); }, 300000);
+setInterval(()=>{ if(S.live) loadLive(); }, 300000);
 </script>
 </body>
 </html>
