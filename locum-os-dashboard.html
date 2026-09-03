@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Locum OS — Sales floor</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Lora:ital@1&display=swap');
+
+:root{
+  --deep:#0A242A; --band:#0E3138; --panel:#123A43; --panelAlt:#0F343C;
+  --line:#1E525C; --cyan:#2DD4CE; --amber:#F2B441; --coral:#F2765E;
+  --text:#E8F3F4; --muted:#93B3B9;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--deep); color:var(--text);
+  font-family:'Archivo','Helvetica Neue',Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.tnum{font-variant-numeric:tabular-nums}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+
+/* ---------- header ---------- */
+.band{background:var(--band);border-bottom:1px solid var(--line);padding:26px 22px 0}
+.band-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px;align-items:flex-start}
+.brand{font-size:12px;font-weight:600;color:var(--cyan);letter-spacing:.18em;margin-bottom:8px}
+h1{margin:0;font-size:40px;font-weight:800;line-height:1.03;letter-spacing:-.035em;color:#fff}
+h1 .accent{color:var(--cyan)}
+.sub{margin:12px 0 0;font-family:'Lora',Georgia,serif;font-style:italic;font-size:16px;color:var(--muted)}
+.clock{font-size:38px;font-weight:800;line-height:1;letter-spacing:-.03em;color:var(--cyan)}
+.today{font-size:14px;color:var(--muted);margin-top:4px}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:14px;align-items:center}
+label.f{font-size:12px;color:var(--muted)}
+input[type=date],input[type=text]{
+  background:var(--deep);color:var(--text);border:1px solid var(--line);
+  border-radius:3px;padding:5px 8px;font-size:13px;color-scheme:dark;font-family:inherit;
+}
+.btn{border:none;border-radius:3px;padding:7px 12px;font-size:12px;font-weight:600;background:var(--cyan);color:#06282B}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted);font-weight:400}
+.tabs{display:flex;align-items:center;gap:26px;margin-top:24px}
+.tab{background:none;border:none;padding:0 0 12px;font-size:14px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent}
+.tab.on{color:var(--cyan);border-bottom-color:var(--cyan)}
+#status{margin-left:auto;font-size:12px;color:var(--muted);padding-bottom:12px}
+#status.err{color:var(--coral)} #status.live{color:var(--cyan)}
+
+/* ---------- setup ---------- */
+#setup{display:none;background:var(--panel);border-bottom:1px solid var(--line);padding:16px 22px}
+#setup.open{display:block}
+#setup p{margin:0 0 12px;font-size:14px;max-width:72ch}
+.setup-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.setup-grid label{font-size:12px;color:var(--muted);display:block}
+.setup-grid input{width:100%;margin-top:4px}
+
+/* ---------- layout ---------- */
+main{padding:20px 22px 30px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;margin-bottom:20px}
+.panel > header{display:flex;justify-content:space-between;align-items:baseline;padding:12px 16px;border-bottom:1px solid var(--line)}
+.panel h2{margin:0;font-size:14px;font-weight:600;letter-spacing:-.01em}
+.panel .note{font-size:12px;color:var(--muted)}
+.body{padding:16px}
+.body.flush{padding:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1fr 2fr;background:var(--panel);border:1px solid var(--line);border-radius:6px;margin-bottom:20px}
+.hero-left{padding:20px;border-right:1px solid var(--line)}
+.hero-right{padding:16px;min-width:0}
+.big{font-size:52px;font-weight:800;letter-spacing:-.04em;line-height:1.02;color:var(--cyan)}
+.lbl{font-size:12px;color:var(--muted)}
+.mini-row{display:flex;gap:28px;margin-top:20px}
+.mini v{display:block}
+.mini .val{font-size:22px;font-weight:700}
+
+/* stat grid */
+.stats{display:grid;border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.stats.c6{grid-template-columns:repeat(6,1fr)}
+.stats.c5{grid-template-columns:repeat(5,1fr)}
+.stats.c4{grid-template-columns:repeat(4,1fr)}
+.cell{padding:12px 16px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.cell.accent{background:rgba(45,212,206,.10)}
+.cell .v{margin-top:4px;font-size:22px;font-weight:600;letter-spacing:-.02em}
+
+/* funnel */
+.fn{display:flex;align-items:center;gap:12px;padding:6px 0}
+.fn .name{width:150px;flex:0 0 auto;font-size:12px;color:var(--muted)}
+.fn .track{flex:1;height:24px;background:rgba(255,255,255,.04);border-radius:2px;position:relative}
+.fn .fill{height:24px;border-radius:2px;background:var(--cyan);position:absolute;left:0;top:0}
+.fn .n{width:64px;text-align:right;font-weight:600;font-size:14px}
+.fn .p{width:78px;text-align:right;font-size:12px;color:var(--muted)}
+
+/* reps */
+.reps{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px}
+.reps .cap{font-size:12px;color:var(--muted);margin-right:4px}
+.rep{background:transparent;border:1px solid var(--line);color:var(--text);border-radius:3px;padding:6px 12px;font-size:14px}
+.rep.on{background:var(--cyan);border-color:var(--cyan);color:#06282B;font-weight:600}
+
+/* table */
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:500;font-size:12px;color:var(--muted);padding:9px 12px;background:var(--band);border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap;font-variant-numeric:tabular-nums}
+tr:nth-child(even) td{background:var(--panelAlt)}
+td.wide{white-space:pre-wrap;font-size:12px;max-width:320px;font-variant-numeric:normal}
+.empty{padding:36px 0;text-align:center;color:var(--muted);font-size:14px}
+
+/* charts */
+.legend{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:6px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.donut-wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:center}
+.donut-legend{font-size:12px;color:var(--muted);line-height:1.9}
+.donut-legend div{white-space:nowrap}
+.foot{font-size:12px;color:var(--muted);max-width:80ch}
+
+@media (max-width:900px){
+  .hero,.two{grid-template-columns:1fr}
+  .hero-left{border-right:none;border-bottom:1px solid var(--line)}
+  .stats.c6,.stats.c5,.stats.c4{grid-template-columns:repeat(2,1fr)}
+  h1{font-size:30px}
+  .band-top{gap:14px}
+}
+</style>
+</head>
+<body>
+
+<div class="band">
+  <div class="band-top">
+    <div>
+      <div class="brand">LOCUM OS</div>
+      <h1><span id="greet">Good evening</span>, team.<br><span class="accent">Welcome back.</span></h1>
+      <p class="sub">Here is where the floor stands right now.</p>
+    </div>
+    <div style="text-align:right">
+      <div class="clock tnum" id="clock">—</div>
+      <div class="today" id="today">—</div>
+      <div class="ctrls">
+        <label class="f">From <input type="date" id="from"></label>
+        <label class="f">To <input type="date" id="to"></label>
+      </div>
+      <div class="ctrls">
+        <button class="btn" id="refresh">Refresh data</button>
+        <button class="btn ghost" id="toggleSetup">Connect sheets</button>
+      </div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab on" data-tab="team">Team</button>
+    <button class="tab" data-tab="closers">Closers</button>
+    <button class="tab" data-tab="setters">Setters</button>
+    <span id="status">Sheet snapshot · 2 Sep 2026</span>
+  </div>
+</div>
+
+<div id="setup">
+  <p>Both sheet links are already filled in. For live refresh, each sheet needs link sharing on
+     (Share → General access → Anyone with the link → Viewer). Without that, the dashboard runs on the 2 Sep snapshot.</p>
+  <div class="setup-grid">
+    <label>Closer EOD sheet — CSV link<input type="text" id="closerUrl"></label>
+    <label>Setter EOD sheet — CSV link<input type="text" id="setterUrl"></label>
+  </div>
+  <div class="ctrls" style="justify-content:flex-start">
+    <button class="btn" id="load">Load my data</button>
+    <button class="btn ghost" id="reset">Back to the snapshot</button>
+  </div>
+</div>
+
+<main id="view"></main>
+
+<script>
+/* ================= data ================= */
+const SNAPSHOT_CLOSER = `Closer Name,DATE OF EOD,Calls On Calendar,LIve Calls,No Shows ,Rescheduling,Qualified Calls,Offers Made,Deposits,Closed,Followups/Dials,Cash Collected,Total Revenue,Rate Today From 1-10,What objections are coming up that are preventing closes?,Is there anything you are struggling/need help with?
+Ali,2026-08-30,1,1,0,0,1,1,0,1,0,7500,7500,8,None,.
+Ali,2026-08-31,6,4,0,2,3,4,0,0,0,1000,1000,5,Parner/Parent,"doctors want to discuss with their partner before deciding. 
+some doctors objected to price; showed them the money back guarantee, still needed to ""think about it""
+doctors are generally over analyzers, and need to think through things more so than the average entrepreneur whose invested in coaching programs before. 
+
+We should give docs until midnight on the day of to invest at the $7500 price point. 
+
+Payment plan was offered to Omar and Malika; both still politely declined. 
+
+Maybe need to show them more value of the program, so they feel dumb saying no. 
+
+"
+Ali,2026-09-01,3,2,0,1,2,2,0,1,1,2000,8000,7,None,"Nothing today, one who didn’t close is highly qualified used to paying $25k for masterclasses, said he’d be interested in VIP in a few months time, but said he’d be willing to pay for velocity tomorrow; said he didn’t have his card with him. "
+Ali,2026-09-02,2,1,0,1,1,1,0,1,0,7500,7500,8,None,.`;
+
+const SNAPSHOT_SETTER = `Setter Name (Your Name),Date of EOD,Dials,Connections,Qualified Conversations,Sets,Calls on Calendar,Showed Calls,Closed Set,Cash Collected,Total Revenue,Rate Today,What Objections Are Coming Up That Are Preventing Sets,Notes From Today
+Cal,2026-08-31,50,6,6,1,0,1,1,7500,7500,7,Uncertainty,Alexis McCabe 
+Cal,2026-08-31,100,3,0,0,5,5,0,0,0,6,Not Educated enough,N/a
+Cal,2026-09-01,15,2,0,0,3,3,1,2000,8000,5,None,Was travelling so couldn’t really dial but back home and fully ready today `;
+
+const CLOSER_SHEET_ID = "1Ogbg8G8xndYDbcBwPEZzujsXgYGvDSjyJJtG89iWBAw";
+const SETTER_SHEET_ID = "1gox2hhIPxUI6EKi9V1zx7GqWaYIpt9jXKCkCPNhEtL0";
+const gviz = id => "https://docs.google.com/spreadsheets/d/" + id +
+  "/gviz/tq?tqx=out:csv&sheet=Form%20Responses%201";
+
+const CSS = getComputedStyle(document.documentElement);
+const CO = {
+  cyan: CSS.getPropertyValue('--cyan').trim(),
+  amber: CSS.getPropertyValue('--amber').trim(),
+  coral: CSS.getPropertyValue('--coral').trim(),
+  line: CSS.getPropertyValue('--line').trim(),
+  muted: CSS.getPropertyValue('--muted').trim(),
+  panel: CSS.getPropertyValue('--panel').trim(),
+};
+const PIE = [CO.cyan, CO.amber, CO.coral, "#7FA9F0", "#6FE3C4", "#C7A6F0", "#B8C77A"];
+
+/* ================= helpers ================= */
+const norm = s => String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+const toNum = v => { const n = parseFloat(String(v==null?"":v).replace(/[^0-9.\-]/g,"")); return isNaN(n)?0:n; };
+const money = n => "$" + Math.round(n||0).toLocaleString("en-US");
+const money2 = n => "$" + (n||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const pct = (a,b) => b ? ((a/b)*100).toFixed(1)+"%" : "—";
+const num = n => (n||0).toLocaleString("en-US");
+const dec = n => (n===null||isNaN(n)) ? "—" : n.toFixed(1);
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function parseDate(v){
+  if(!v) return null;
+  const s = String(v).trim(); if(!s) return null;
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m) return new Date(+m[1], +m[2]-1, +m[3]);
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(m) return new Date(+m[3], +m[1]-1, +m[2]);
+  const d = new Date(s); return isNaN(d.getTime()) ? null : d;
+}
+const dkey = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const shortDate = k => { const p = k.split("-"); return p[2]+"/"+p[1]; };
+
+function parseCSV(text){
+  const rows=[]; let row=[], cur="", q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(q){
+      if(ch==='"'){ if(text[i+1]==='"'){ cur+='"'; i++; } else q=false; }
+      else cur+=ch;
+    } else if(ch==='"') q=true;
+    else if(ch===","){ row.push(cur); cur=""; }
+    else if(ch==="\r"){ /* skip */ }
+    else if(ch==="\n"){ row.push(cur); rows.push(row); row=[]; cur=""; }
+    else cur+=ch;
+  }
+  if(cur!=="" || row.length){ row.push(cur); rows.push(row); }
+  return rows.filter(r => r.some(c => String(c).trim()!==""));
+}
+function toObjects(text){
+  const rows = parseCSV(text); if(!rows.length) return [];
+  const h = rows[0];
+  return rows.slice(1).map(r => { const o={}; h.forEach((k,i)=> o[k] = r[i]===undefined?"":r[i]); return o; });
+}
+
+function pick(headers, cands){
+  for(const c of cands){ const h = headers.find(x => norm(x)===c); if(h) return h; }
+  for(const c of cands){ const h = headers.find(x => norm(x).includes(c)); if(h) return h; }
+  return null;
+}
+
+const CLOSER_MAP = {
+  name:["closername","name"], date:["dateofeod","date"],
+  callsBooked:["callsoncalendar","callsoncalend","oncalendar"],
+  showed:["livecalls","showedcalls","callsthatshowed"],
+  noShows:["noshows"], reschedules:["rescheduling","reschedules","reschedule"],
+  qualified:["qualifiedcalls","qualified"], offers:["offersmade","offers"],
+  deposits:["deposits","deposit"], closed:["closed","closes"],
+  followups:["followupsdials","followups"], cash:["cashcollected","cash"],
+  revenue:["totalrevenue","revenue"], rate:["ratetoday","ratetodayfrom110","rate"],
+  objection:["whatobjections","objections","objection"],
+  notes:["isthereanythingyouarestrugglingneedhelpwith","struggling","notes"]
+};
+const SETTER_MAP = {
+  name:["settername","setternameyourname","name"], date:["dateofeod","date"],
+  dials:["dials"], connections:["connections"],
+  qualConvos:["qualifiedconversations","qualifiedconve","qualifiedconvos","qualified"],
+  sets:["sets"], callsBooked:["callsoncalendar","callsoncalend"],
+  showed:["showedcalls","showed"], closedSets:["closedset","closedsets","closed"],
+  cash:["cashcollected","cash"], revenue:["totalrevenue","revenue"],
+  rate:["ratetoday","rate"], objection:["whatobjections","objections","objection"],
+  notes:["notesfromtoday","notes"]
+};
+const NUMERIC = new Set(["callsBooked","showed","noShows","reschedules","qualified","offers","deposits",
+  "closed","followups","cash","revenue","rate","dials","connections","qualConvos","sets","closedSets"]);
+
+function shape(rows, map){
+  if(!rows.length) return [];
+  const headers = Object.keys(rows[0]); const cols = {};
+  for(const f in map) cols[f] = pick(headers, map[f]);
+  return rows.map(r => {
+    const o = {};
+    for(const f in cols){
+      const raw = cols[f] ? r[cols[f]] : "";
+      o[f] = NUMERIC.has(f) ? toNum(raw) : String(raw==null?"":raw).trim();
+    }
+    o._date = parseDate(cols.date ? r[cols.date] : "");
+    o._key = o._date ? dkey(o._date) : "";
+    return o;
+  }).filter(r => r.name || r._date);
+}
+
+/* ================= aggregation ================= */
+const sum = (rows,k) => rows.reduce((a,r)=>a+(r[k]||0),0);
+function avgRate(rows){
+  const v = rows.map(r=>r.rate).filter(x=>x>0);
+  return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null;
+}
+function closerStats(r){ return {
+  entries:r.length, callsBooked:sum(r,"callsBooked"), showed:sum(r,"showed"), noShows:sum(r,"noShows"),
+  reschedules:sum(r,"reschedules"), qualified:sum(r,"qualified"), offers:sum(r,"offers"),
+  deposits:sum(r,"deposits"), closed:sum(r,"closed"), followups:sum(r,"followups"),
+  cash:sum(r,"cash"), revenue:sum(r,"revenue"), rate:avgRate(r) }; }
+function setterStats(r){ return {
+  entries:r.length, dials:sum(r,"dials"), connections:sum(r,"connections"), qualConvos:sum(r,"qualConvos"),
+  sets:sum(r,"sets"), callsBooked:sum(r,"callsBooked"), showed:sum(r,"showed"), closedSets:sum(r,"closedSets"),
+  cash:sum(r,"cash"), revenue:sum(r,"revenue"), rate:avgRate(r) }; }
+function timeline(rows){
+  const by = {};
+  rows.forEach(r => { if(!r._key) return;
+    by[r._key] = by[r._key] || {day:r._key, cash:0, revenue:0};
+    by[r._key].cash += r.cash||0; by[r._key].revenue += r.revenue||0; });
+  return Object.values(by).sort((a,b)=> a.day < b.day ? -1 : 1).map(d => ({...d, label:shortDate(d.day)}));
+}
+function objections(rows){
+  const c = {};
+  rows.forEach(r => { const v = (r.objection||"").trim();
+    if(!v || v==="." || v.toLowerCase()==="n/a") return; c[v] = (c[v]||0)+1; });
+  return Object.entries(c).map(([name,value])=>({name,value})).sort((a,b)=>b.value-a.value);
+}
+const namesOf = rows => [...new Set(rows.map(r=>r.name).filter(Boolean))].sort();
+
+/* ================= charts (plain SVG) ================= */
+function niceMax(v){
+  if(v<=0) return 1;
+  const e = Math.pow(10, Math.floor(Math.log10(v)));
+  const f = v/e;
+  const m = f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10;
+  return m*e;
+}
+const svgEl = s => `<svg width="100%" height="240" viewBox="0 0 %W% 240" preserveAspectRatio="none">${s}</svg>`;
+
+function lineChart(box, data){
+  if(!data.length){ box.innerHTML = '<div class="empty">No entries in this date range.</div>'; return; }
+  const W = Math.max(320, box.clientWidth), H = 240, P = {l:56,r:14,t:14,b:30};
+  const max = niceMax(Math.max(1, ...data.map(d=>Math.max(d.cash,d.revenue))));
+  const X = i => data.length>1 ? P.l + i*(W-P.l-P.r)/(data.length-1) : P.l + (W-P.l-P.r)/2;
+  const Y = v => H-P.b - (v/max)*(H-P.t-P.b);
+  let s = "";
+  for(let g=0; g<=4; g++){
+    const v = max*g/4, y = Y(v);
+    s += `<line x1="${P.l}" y1="${y}" x2="${W-P.r}" y2="${y}" stroke="${CO.line}" stroke-width="1"/>`;
+    s += `<text x="${P.l-8}" y="${y+4}" fill="${CO.muted}" font-size="11" text-anchor="end">$${(v/1000)}k</text>`;
+  }
+  data.forEach((d,i)=>{ s += `<text x="${X(i)}" y="${H-10}" fill="${CO.muted}" font-size="11" text-anchor="middle">${d.label}</text>`; });
+  [["revenue",CO.amber,"Revenue"],["cash",CO.cyan,"Cash collected"]].forEach(([k,col])=>{
+    const pts = data.map((d,i)=> X(i)+","+Y(d[k])).join(" ");
+    s += `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linejoin="round"/>`;
+    data.forEach((d,i)=>{
+      s += `<circle cx="${X(i)}" cy="${Y(d[k])}" r="3.5" fill="${col}"><title>${d.label} · ${money(d[k])}</title></circle>`;
+    });
+  });
+  box.innerHTML = `<svg width="${W}" height="${H}" style="max-width:100%">${s}</svg>` +
+    `<div class="legend"><span><i style="background:${CO.cyan}"></i>Cash collected</span>` +
+    `<span><i style="background:${CO.amber}"></i>Revenue</span></div>`;
+}
+
+function barChart(box, items, valKey, color, fmt){
+  if(!items.length){ box.innerHTML = '<div class="empty">No reps in this date range.</div>'; return; }
+  const W = Math.max(320, box.clientWidth), rowH = 40, P = {l:96,r:70,t:8,b:8};
+  const H = Math.max(120, items.length*rowH + P.t + P.b);
+  const max = Math.max(1, ...items.map(i=>i[valKey]));
+  let s = "";
+  items.forEach((it,i)=>{
+    const y = P.t + i*rowH + 8, bw = (it[valKey]/max)*(W-P.l-P.r);
+    s += `<text x="${P.l-10}" y="${y+16}" fill="${CO.muted}" font-size="12" text-anchor="end">${esc(it.name)}</text>`;
+    s += `<rect x="${P.l}" y="${y}" width="${Math.max(bw,2)}" height="22" rx="2" fill="${color}"><title>${esc(it.name)} · ${fmt(it[valKey])}</title></rect>`;
+    s += `<text x="${P.l+Math.max(bw,2)+10}" y="${y+16}" fill="${CO.muted}" font-size="12">${fmt(it[valKey])}</text>`;
+  });
+  box.innerHTML = `<svg width="${W}" height="${H}" style="max-width:100%">${s}</svg>`;
+}
+
+function donut(box, items){
+  if(!items.length){ box.innerHTML = '<div class="empty">No objections logged yet.</div>'; return; }
+  const size = 200, r = 88, ri = 50, cx = size/2, cy = size/2;
+  const total = items.reduce((a,b)=>a+b.value,0);
+  let a0 = -Math.PI/2, s = "";
+  items.forEach((it,i)=>{
+    const a1 = a0 + (it.value/total)*Math.PI*2;
+    const large = (a1-a0) > Math.PI ? 1 : 0;
+    const p = (rad,ang)=> [cx+rad*Math.cos(ang), cy+rad*Math.sin(ang)];
+    const [x1,y1]=p(r,a0), [x2,y2]=p(r,a1), [x3,y3]=p(ri,a1), [x4,y4]=p(ri,a0);
+    s += `<path d="M${x1} ${y1} A${r} ${r} 0 ${large} 1 ${x2} ${y2} L${x3} ${y3} A${ri} ${ri} 0 ${large} 0 ${x4} ${y4} Z" fill="${PIE[i%PIE.length]}" stroke="${CO.panel}" stroke-width="2"><title>${esc(it.name)} · ${it.value}</title></path>`;
+    a0 = a1;
+  });
+  const legend = items.map((it,i)=>
+    `<div><i style="display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:8px;background:${PIE[i%PIE.length]}"></i>${esc(it.name)} <span style="color:var(--text)">${it.value}</span></div>`
+  ).join("");
+  box.innerHTML = `<div class="donut-wrap"><svg width="${size}" height="${size}">${s}</svg><div class="donut-legend">${legend}</div></div>`;
+}
+
+/* ================= state ================= */
+const S = {
+  closer: [], setter: [], tab: "team",
+  from: "", to: "", closerPick: "All", setterPick: "All",
+  closerUrl: gviz(CLOSER_SHEET_ID), setterUrl: gviz(SETTER_SHEET_ID),
+};
+
+function applyData(cCsv, sCsv){
+  S.closer = shape(toObjects(cCsv), CLOSER_MAP);
+  S.setter = shape(toObjects(sCsv), SETTER_MAP);
+  const days = [...S.closer, ...S.setter].map(r=>r._key).filter(Boolean).sort();
+  if(days.length){ S.from = days[0]; S.to = days[days.length-1]; }
+  document.getElementById("from").value = S.from;
+  document.getElementById("to").value = S.to;
+}
+
+function setStatus(msg, cls){
+  const el = document.getElementById("status");
+  el.textContent = msg; el.className = cls || "";
+}
+
+async function fetchCsv(url){
+  const res = await fetch(url);
+  if(!res.ok) throw new Error(res.status===401||res.status===403
+    ? "Google blocked the request. The sheet needs link sharing turned on."
+    : "The sheet returned " + res.status + ". Check the link.");
+  const t = await res.text();
+  if(t.trim().startsWith("<")) throw new Error("That link gave back a web page, not CSV. Turn on link sharing.");
+  return t;
+}
+
+async function loadLive(){
+  setStatus("Loading from Google Sheets…");
+  try{
+    const [c,s] = await Promise.all([fetchCsv(S.closerUrl), fetchCsv(S.setterUrl)]);
+    applyData(c,s);
+    setStatus("Live · updated " + new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}), "live");
+    try{ localStorage.setItem("locumos_urls", JSON.stringify({c:S.closerUrl, s:S.setterUrl})); }catch(e){}
+    render();
+  }catch(err){ setStatus(err.message, "err"); }
+}
+
+/* ================= render ================= */
+const inRange = r => r._key && (!S.from || r._key >= S.from) && (!S.to || r._key <= S.to);
+
+function statGrid(cols, items){
+  return `<div class="stats c${cols}">` + items.map(it =>
+    `<div class="cell${it.accent?" accent":""}">
+       <div class="lbl">${esc(it.label)}</div>
+       <div class="v tnum"${it.tone?` style="color:${it.tone}"`:""}>${esc(it.value)}</div>
+     </div>`).join("") + `</div>`;
+}
+function panel(title, note, inner, flush){
+  return `<section class="panel"><header><h2>${esc(title)}</h2>${note?`<span class="note">${esc(note)}</span>`:""}</header>
+          <div class="body${flush?" flush":""}">${inner}</div></section>`;
+}
+function funnel(steps){
+  const top = Math.max(1, ...steps.map(s=>s.value));
+  return steps.map((s,i)=>{
+    const prev = i>0 ? steps[i-1].value : null;
+    const w = Math.max((s.value/top)*100, s.value>0?4:1.5);
+    const last = i===steps.length-1;
+    return `<div class="fn"><div class="name">${esc(s.label)}</div>
+      <div class="track"><div class="fill" style="width:${w}%;background:${last?CO.amber:CO.cyan};opacity:${last?1:(1-i*0.09).toFixed(2)}"></div></div>
+      <div class="n tnum">${num(s.value)}</div>
+      <div class="p tnum">${prev!==null?pct(s.value,prev):""}</div></div>`;
+  }).join("");
+}
+function table(rows, cols){
+  if(!rows.length) return '<div class="empty">Nothing logged in this date range.</div>';
+  return `<div class="scroll"><table><thead><tr>${cols.map(c=>`<th>${esc(c.h)}</th>`).join("")}</tr></thead><tbody>` +
+    rows.map(r=>`<tr>${cols.map(c=>`<td class="${c.wide?"wide":""}">${esc(c.f?c.f(r):r[c.k])}</td>`).join("")}</tr>`).join("") +
+    `</tbody></table></div>`;
+}
+function repBar(label, names, current, action){
+  return `<div class="reps"><span class="cap">${label}</span>` +
+    ["All", ...names].map(n=>`<button class="rep${current===n?" on":""}" data-${action}="${esc(n)}">${esc(n)}</button>`).join("") +
+    `</div>`;
+}
+
+function render(){
+  const cIn = S.closer.filter(inRange), sIn = S.setter.filter(inRange);
+  const view = document.getElementById("view");
+  const charts = [];
+
+  if(S.tab === "team"){
+    const cs = closerStats(cIn), ss = setterStats(sIn);
+    const board = namesOf(S.closer).map(n=>({name:n, ...closerStats(cIn.filter(r=>r.name===n))}))
+      .filter(r=>r.cash||r.closed||r.showed).sort((a,b)=>b.cash-a.cash);
+    const sboard = namesOf(S.setter).map(n=>({name:n, ...setterStats(sIn.filter(r=>r.name===n))}))
+      .filter(r=>r.sets||r.dials).sort((a,b)=>b.sets-a.sets);
+
+    view.innerHTML =
+      `<div class="hero">
+        <div class="hero-left">
+          <div class="lbl">Cash collected</div>
+          <div class="big tnum">${money(cs.cash)}</div>
+          <div class="lbl" style="margin-top:6px">of ${money(cs.revenue)} contracted · ${pct(cs.cash,cs.revenue)} collected</div>
+          <div class="mini-row">
+            <div class="mini"><div class="lbl">Closes</div><div class="val tnum">${num(cs.closed)}</div></div>
+            <div class="mini"><div class="lbl">Calls taken</div><div class="val tnum">${num(cs.showed)}</div></div>
+            <div class="mini"><div class="lbl">Sets booked</div><div class="val tnum">${num(ss.sets)}</div></div>
+          </div>
+        </div>
+        <div class="hero-right"><div id="ch-team-trend"></div></div>
+      </div>` +
+      panel("Pipeline, first dial to signed", "Setter activity feeding closer results", funnel([
+        {label:"Dials", value:ss.dials},
+        {label:"Connections", value:ss.connections},
+        {label:"Qualified convos", value:ss.qualConvos},
+        {label:"Sets booked", value:ss.sets},
+        {label:"Calls on calendar", value:cs.callsBooked},
+        {label:"Calls showed", value:cs.showed},
+        {label:"Offers made", value:cs.offers},
+        {label:"Closed", value:cs.closed}
+      ])) +
+      panel("Team rates", "", statGrid(6, [
+        {label:"Show rate", value:pct(cs.showed, cs.callsBooked)},
+        {label:"Offer rate", value:pct(cs.offers, cs.showed)},
+        {label:"Close rate", value:pct(cs.closed, cs.showed)},
+        {label:"Offer to close", value:pct(cs.closed, cs.offers)},
+        {label:"Cash collection", value:pct(cs.cash, cs.revenue)},
+        {label:"Cash per call showed", value: cs.showed?money(cs.cash/cs.showed):"—", tone:CO.cyan},
+        {label:"Connect rate", value:pct(ss.connections, ss.dials)},
+        {label:"Convo to set", value:pct(ss.sets, ss.connections)},
+        {label:"Qualified to set", value:pct(ss.sets, ss.qualConvos)},
+        {label:"No shows", value:num(cs.noShows)},
+        {label:"Reschedules", value:num(cs.reschedules)},
+        {label:"Avg day rating", value:dec(avgRate([...cIn, ...sIn]))+" / 10", accent:true}
+      ])) +
+      `<div class="two">
+        ${panel("Cash by closer","",'<div id="ch-cboard"></div>')}
+        ${panel("Sets by setter","",'<div id="ch-sboard"></div>')}
+      </div>` +
+      panel("What prospects push back on", "Both teams, this date range", '<div id="ch-obj"></div>') +
+      `<p class="foot">Team cash and revenue come from the closer sheet so the same deal is never counted twice.
+       Setter cash shows which deals a setter's booked calls produced.</p>`;
+
+    charts.push(()=> lineChart(document.getElementById("ch-team-trend"), timeline(cIn)));
+    charts.push(()=> barChart(document.getElementById("ch-cboard"), board, "cash", CO.cyan, money));
+    charts.push(()=> barChart(document.getElementById("ch-sboard"), sboard, "sets", CO.amber, num));
+    charts.push(()=> donut(document.getElementById("ch-obj"), objections([...cIn, ...sIn])));
+  }
+
+  if(S.tab === "closers"){
+    const sel = S.closerPick==="All" ? cIn : cIn.filter(r=>r.name===S.closerPick);
+    const c1 = closerStats(sel);
+    view.innerHTML =
+      repBar("Closer", namesOf(S.closer), S.closerPick, "closer") +
+      panel((S.closerPick==="All"?"All closers":S.closerPick)+" — volume", c1.entries+" end-of-day reports", statGrid(6,[
+        {label:"Calls on calendar", value:num(c1.callsBooked)},
+        {label:"Calls showed", value:num(c1.showed)},
+        {label:"No shows", value:num(c1.noShows)},
+        {label:"Reschedules", value:num(c1.reschedules)},
+        {label:"Qualified calls", value:num(c1.qualified)},
+        {label:"Offers made", value:num(c1.offers)},
+        {label:"Deposits", value:num(c1.deposits)},
+        {label:"Closed", value:num(c1.closed)},
+        {label:"Followups / dials", value:num(c1.followups)},
+        {label:"Cash collected", value:money(c1.cash), tone:CO.cyan},
+        {label:"Revenue contracted", value:money(c1.revenue)},
+        {label:"Avg day rating", value:dec(c1.rate)+" / 10", accent:true}
+      ])) +
+      panel("Conversion and cash efficiency","", statGrid(4,[
+        {label:"Show rate", value:pct(c1.showed,c1.callsBooked)},
+        {label:"Offer rate", value:pct(c1.offers,c1.showed)},
+        {label:"Close rate", value:pct(c1.closed,c1.showed)},
+        {label:"Offer to close", value:pct(c1.closed,c1.offers)},
+        {label:"Cash per call booked", value:c1.callsBooked?money2(c1.cash/c1.callsBooked):"—"},
+        {label:"Cash per call showed", value:c1.showed?money2(c1.cash/c1.showed):"—"},
+        {label:"Cash per close", value:c1.closed?money2(c1.cash/c1.closed):"—"},
+        {label:"Cash collection rate", value:pct(c1.cash,c1.revenue)}
+      ])) +
+      `<div class="two">
+        ${panel("Cash and revenue by day","",'<div id="ch-ctrend"></div>')}
+        ${panel("Objections heard","",'<div id="ch-cobj"></div>')}
+      </div>` +
+      panel("Daily reports","", table([...sel].sort((a,b)=> a._key<b._key?1:-1), [
+        {k:"_key",h:"Date"},{k:"name",h:"Closer"},{k:"callsBooked",h:"Booked"},{k:"showed",h:"Showed"},
+        {k:"offers",h:"Offers"},{k:"closed",h:"Closed"},{k:"cash",h:"Cash",f:r=>money(r.cash)},
+        {k:"revenue",h:"Revenue",f:r=>money(r.revenue)},{k:"rate",h:"Rating"},
+        {k:"objection",h:"Objection",wide:true},{k:"notes",h:"Notes",wide:true}
+      ]), true);
+
+    charts.push(()=> lineChart(document.getElementById("ch-ctrend"), timeline(sel)));
+    charts.push(()=> donut(document.getElementById("ch-cobj"), objections(sel)));
+  }
+
+  if(S.tab === "setters"){
+    const sel = S.setterPick==="All" ? sIn : sIn.filter(r=>r.name===S.setterPick);
+    const s1 = setterStats(sel);
+    view.innerHTML =
+      repBar("Setter", namesOf(S.setter), S.setterPick, "setter") +
+      panel((S.setterPick==="All"?"All setters":S.setterPick)+" — activity", s1.entries+" end-of-day reports", statGrid(5,[
+        {label:"Dials", value:num(s1.dials)},
+        {label:"Connections", value:num(s1.connections)},
+        {label:"Qualified convos", value:num(s1.qualConvos)},
+        {label:"Sets booked", value:num(s1.sets)},
+        {label:"Calls on calendar", value:num(s1.callsBooked)},
+        {label:"Calls showed", value:num(s1.showed)},
+        {label:"Sets that closed", value:num(s1.closedSets)},
+        {label:"Cash produced", value:money(s1.cash), tone:CO.cyan},
+        {label:"Revenue produced", value:money(s1.revenue)},
+        {label:"Avg day rating", value:dec(s1.rate)+" / 10", accent:true}
+      ])) +
+      panel("Conversion and cash efficiency","", statGrid(4,[
+        {label:"Connect rate", value:pct(s1.connections,s1.dials)},
+        {label:"Convo to set", value:pct(s1.sets,s1.connections)},
+        {label:"Qualified to set", value:pct(s1.sets,s1.qualConvos)},
+        {label:"Set to close", value:pct(s1.closedSets,s1.sets)},
+        {label:"Showed to close", value:pct(s1.closedSets,s1.showed)},
+        {label:"Cash per set", value:s1.sets?money2(s1.cash/s1.sets):"—"},
+        {label:"Cash per call showed", value:s1.showed?money2(s1.cash/s1.showed):"—"},
+        {label:"Cash collection rate", value:pct(s1.cash,s1.revenue)}
+      ])) +
+      `<div class="two">
+        ${panel("Cash and revenue by day","",'<div id="ch-strend"></div>')}
+        ${panel("Objections heard on the phones","",'<div id="ch-sobj"></div>')}
+      </div>` +
+      panel("Daily reports","", table([...sel].sort((a,b)=> a._key<b._key?1:-1), [
+        {k:"_key",h:"Date"},{k:"name",h:"Setter"},{k:"dials",h:"Dials"},{k:"connections",h:"Connects"},
+        {k:"qualConvos",h:"Qualified"},{k:"sets",h:"Sets"},{k:"showed",h:"Showed"},{k:"closedSets",h:"Closed"},
+        {k:"cash",h:"Cash",f:r=>money(r.cash)},{k:"rate",h:"Rating"},
+        {k:"objection",h:"Objection",wide:true},{k:"notes",h:"Notes",wide:true}
+      ]), true);
+
+    charts.push(()=> lineChart(document.getElementById("ch-strend"), timeline(sel)));
+    charts.push(()=> donut(document.getElementById("ch-sobj"), objections(sel)));
+  }
+
+  requestAnimationFrame(()=> charts.forEach(fn => fn()));
+  window._redraw = charts;
+}
+
+/* ================= clock + events ================= */
+function tick(){
+  const now = new Date(), h = now.getHours();
+  document.getElementById("greet").textContent = h<12 ? "Good morning" : h<17 ? "Good afternoon" : "Good evening";
+  document.getElementById("clock").textContent = now.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+  document.getElementById("today").textContent = now.toLocaleDateString([], {weekday:"long", day:"numeric", month:"long"});
+}
+
+document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach(x => x.classList.remove("on"));
+  b.classList.add("on"); S.tab = b.dataset.tab; render();
+}));
+document.getElementById("view").addEventListener("click", e => {
+  const b = e.target.closest("button"); if(!b) return;
+  if(b.dataset.closer !== undefined){ S.closerPick = b.dataset.closer; render(); }
+  if(b.dataset.setter !== undefined){ S.setterPick = b.dataset.setter; render(); }
+});
+document.getElementById("from").addEventListener("change", e => { S.from = e.target.value; render(); });
+document.getElementById("to").addEventListener("change", e => { S.to = e.target.value; render(); });
+document.getElementById("toggleSetup").addEventListener("click", e => {
+  const p = document.getElementById("setup"); p.classList.toggle("open");
+  e.target.textContent = p.classList.contains("open") ? "Hide setup" : "Connect sheets";
+});
+document.getElementById("refresh").addEventListener("click", loadLive);
+document.getElementById("load").addEventListener("click", () => {
+  S.closerUrl = document.getElementById("closerUrl").value.trim();
+  S.setterUrl = document.getElementById("setterUrl").value.trim();
+  loadLive();
+});
+document.getElementById("reset").addEventListener("click", () => {
+  applyData(SNAPSHOT_CLOSER, SNAPSHOT_SETTER);
+  setStatus("Sheet snapshot · 2 Sep 2026"); render();
+});
+let rt; window.addEventListener("resize", () => {
+  clearTimeout(rt); rt = setTimeout(() => (window._redraw||[]).forEach(fn => fn()), 150);
+});
+
+/* ================= boot ================= */
+tick(); setInterval(tick, 30000);
+try{
+  const saved = JSON.parse(localStorage.getItem("locumos_urls") || "null");
+  if(saved && saved.c){ S.closerUrl = saved.c; S.setterUrl = saved.s; }
+}catch(e){}
+document.getElementById("closerUrl").value = S.closerUrl;
+document.getElementById("setterUrl").value = S.setterUrl;
+applyData(SNAPSHOT_CLOSER, SNAPSHOT_SETTER);
+render();
+</script>
+</body>
+</html>
