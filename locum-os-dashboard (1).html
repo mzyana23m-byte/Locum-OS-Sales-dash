@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Locum OS — Sales floor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#071C21; --band:rgba(14,49,56,.72); --card:rgba(255,255,255,.045);
+  --cardHi:rgba(255,255,255,.075); --stroke:rgba(255,255,255,.09);
+  --cyan:#2DD4CE; --amber:#F2B441; --coral:#F2765E; --violet:#A78BFA; --blue:#7FA9F0;
+  --text:#EAF4F5; --muted:#8FADB4; --dim:#6B8990;
+  --ease:cubic-bezier(.32,.72,0,1);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%}
+body{
+  background:
+    radial-gradient(1100px 620px at 88% -12%, rgba(45,212,206,.16), transparent 62%),
+    radial-gradient(900px 520px at 4% 4%, rgba(127,169,240,.08), transparent 60%),
+    var(--bg);
+  background-attachment:fixed;
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Inter","Helvetica Neue",Arial,sans-serif;
+  font-feature-settings:"cv02","cv03","ss01";
+  -webkit-font-smoothing:antialiased;
+  letter-spacing:-.011em;
+}
+.tnum{font-variant-numeric:tabular-nums}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--cyan);outline-offset:3px;border-radius:8px}
+a{color:var(--cyan);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ---------------- top bar ---------------- */
+.bar{
+  position:sticky;top:0;z-index:40;
+  background:var(--band);
+  -webkit-backdrop-filter:saturate(180%) blur(22px);
+  backdrop-filter:saturate(180%) blur(22px);
+  border-bottom:1px solid var(--stroke);
+}
+.bar-in{max-width:1360px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.mark{display:flex;align-items:center;gap:9px;font-weight:600;font-size:15px;letter-spacing:-.02em}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--cyan);box-shadow:0 0 0 4px rgba(45,212,206,.16)}
+.dot.pulse{animation:pulse 2.4s var(--ease) infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 4px rgba(45,212,206,.16)}50%{box-shadow:0 0 0 9px rgba(45,212,206,.03)}}
+
+/* segmented control */
+.seg{position:relative;display:flex;background:rgba(255,255,255,.06);border-radius:11px;padding:3px}
+.seg-ind{position:absolute;top:3px;bottom:3px;border-radius:8px;background:rgba(255,255,255,.13);
+  box-shadow:0 1px 3px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.14);
+  transition:transform .42s var(--ease),width .42s var(--ease);will-change:transform,width}
+.seg button{position:relative;z-index:1;padding:7px 15px;font-size:13.5px;font-weight:500;color:var(--muted);
+  border-radius:8px;transition:color .28s var(--ease)}
+.seg button.on{color:#fff;font-weight:600}
+
+.spacer{flex:1}
+.chip{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border:1px solid var(--stroke);
+  border-radius:10px;padding:6px 10px;font-size:12.5px;color:var(--muted);transition:background .25s var(--ease)}
+.chip:hover{background:rgba(255,255,255,.1)}
+.chip input{background:none;border:none;color:var(--text);font:inherit;font-size:12.5px;color-scheme:dark;padding:0;width:118px}
+.btn{background:var(--cyan);color:#052326;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:600;
+  transition:transform .22s var(--ease),filter .22s var(--ease)}
+.btn:hover{filter:brightness(1.08)} .btn:active{transform:scale(.96)}
+.btn.ghost{background:rgba(255,255,255,.06);color:var(--muted);border:1px solid var(--stroke)}
+.btn.ghost:hover{background:rgba(255,255,255,.11);color:var(--text)}
+#status{font-size:12px;color:var(--muted)} #status.err{color:var(--coral)} #status.live{color:var(--cyan)}
+
+/* ---------------- hero ---------------- */
+.wrap{max-width:1360px;margin:0 auto;padding:26px 24px 44px}
+.hello{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:26px}
+h1{margin:0;font-size:clamp(30px,4.1vw,46px);font-weight:700;letter-spacing:-.038em;line-height:1.04}
+h1 .accent{background:linear-gradient(96deg,var(--cyan),#7FE9E4);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{margin:9px 0 0;font-size:15.5px;color:var(--muted)}
+.clock{font-size:40px;font-weight:700;letter-spacing:-.035em;line-height:1;color:var(--cyan)}
+.today{font-size:13.5px;color:var(--muted);margin-top:5px;text-align:right}
+
+/* ---------------- cards ---------------- */
+.card{
+  background:var(--card);border:1px solid var(--stroke);border-radius:17px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.055),0 12px 34px -22px rgba(0,0,0,.85);
+  margin-bottom:18px;overflow:hidden;
+}
+.card > header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:15px 19px 0}
+.card h2{margin:0;font-size:15px;font-weight:600;letter-spacing:-.02em}
+.note{font-size:12.5px;color:var(--dim)}
+.card .body{padding:16px 19px 19px}
+.card .body.flush{padding:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+
+.hero{display:grid;grid-template-columns:minmax(260px,.85fr) 1.6fr;gap:0}
+.hero-l{padding:24px 22px;border-right:1px solid var(--stroke)}
+.hero-r{padding:12px 16px 8px;min-width:0}
+.lbl{font-size:12.5px;color:var(--muted)}
+.big{font-size:clamp(40px,5.2vw,58px);font-weight:700;letter-spacing:-.045em;line-height:1.02;
+  background:linear-gradient(96deg,var(--cyan),#8DEDE8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.mini-row{display:flex;gap:26px;margin-top:22px;flex-wrap:wrap}
+.mini .val{font-size:23px;font-weight:600;letter-spacing:-.03em;margin-top:2px}
+
+/* stat tiles */
+.tiles{display:grid;gap:10px;grid-template-columns:repeat(6,1fr)}
+.tiles.c4{grid-template-columns:repeat(4,1fr)}
+.tiles.c5{grid-template-columns:repeat(5,1fr)}
+.tile{background:rgba(255,255,255,.035);border:1px solid var(--stroke);border-radius:13px;padding:13px 14px;
+  transition:transform .3s var(--ease),background .3s var(--ease)}
+.tile:hover{transform:translateY(-2px);background:var(--cardHi)}
+.tile.accent{background:linear-gradient(160deg,rgba(45,212,206,.16),rgba(45,212,206,.05));border-color:rgba(45,212,206,.3)}
+.tile .v{margin-top:5px;font-size:22px;font-weight:600;letter-spacing:-.03em}
+
+/* funnel */
+.fn{display:flex;align-items:center;gap:13px;padding:6px 0}
+.fn .name{width:150px;flex:0 0 auto;font-size:13px;color:var(--muted)}
+.fn .track{flex:1;height:26px;background:rgba(255,255,255,.045);border-radius:7px;overflow:hidden}
+.fn .fill{height:100%;width:0;border-radius:7px;transition:width .95s var(--ease);
+  background:linear-gradient(90deg,rgba(45,212,206,.55),var(--cyan))}
+.fn.last .fill{background:linear-gradient(90deg,rgba(242,180,65,.5),var(--amber))}
+.fn .n{width:62px;text-align:right;font-weight:600;font-size:14.5px}
+.fn .p{width:74px;text-align:right;font-size:12.5px;color:var(--dim)}
+
+/* leaderboard */
+.lb{display:flex;align-items:center;gap:13px;padding:7px 0}
+.lb .who{width:104px;flex:0 0 auto;font-size:13.5px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb .track{flex:1;height:24px;background:rgba(255,255,255,.045);border-radius:7px;overflow:hidden}
+.lb .fill{height:100%;width:0;border-radius:7px;transition:width .95s var(--ease)}
+.lb .v{width:92px;text-align:right;font-size:13.5px;font-weight:600}
+
+/* calls feed */
+.calls{display:flex;flex-direction:column}
+.call{display:grid;grid-template-columns:78px 1fr auto;gap:14px;padding:14px 19px;border-top:1px solid var(--stroke);
+  transition:background .25s var(--ease)}
+.call:first-child{border-top:none}
+.call:hover{background:rgba(255,255,255,.03)}
+.call .when{font-size:12px;color:var(--dim);padding-top:2px}
+.call .who{font-size:14px;font-weight:600;letter-spacing:-.015em}
+.call .lead{font-size:12.5px;color:var(--muted);margin-top:1px}
+.call .sum{font-size:13px;color:var(--muted);margin-top:7px;line-height:1.5;white-space:pre-wrap;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.call .right{text-align:right}
+.call .cash{font-size:16px;font-weight:600;margin-top:7px;letter-spacing:-.02em}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:600;letter-spacing:.01em}
+.pill.closed{background:rgba(45,212,206,.17);color:var(--cyan)}
+.pill.deposit{background:rgba(242,180,65,.17);color:var(--amber)}
+.pill.follow{background:rgba(127,169,240,.17);color:var(--blue)}
+.pill.finance{background:rgba(167,139,250,.17);color:var(--violet)}
+.pill.other{background:rgba(255,255,255,.09);color:var(--muted)}
+.rec{font-size:12px;margin-top:8px;display:inline-block}
+
+.latest{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:start}
+.latest .stamp{font-size:12.5px;color:var(--dim)}
+
+/* table */
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-weight:500;font-size:12px;color:var(--dim);padding:11px 16px;
+  border-bottom:1px solid var(--stroke);white-space:nowrap;background:rgba(255,255,255,.02)}
+td{padding:11px 16px;border-bottom:1px solid rgba(255,255,255,.055);vertical-align:top;white-space:nowrap;
+  font-variant-numeric:tabular-nums}
+tbody tr{transition:background .2s var(--ease)}
+tbody tr:hover td{background:rgba(255,255,255,.03)}
+td.wide{white-space:pre-wrap;font-size:12.5px;max-width:320px;font-variant-numeric:normal;color:var(--muted);line-height:1.5}
+.empty{padding:44px 0;text-align:center;color:var(--dim);font-size:14px}
+
+/* rep pills */
+.reps{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:16px}
+.reps .cap{font-size:12.5px;color:var(--dim);margin-right:3px}
+.rep{background:rgba(255,255,255,.05);border:1px solid var(--stroke);border-radius:999px;padding:7px 15px;font-size:13.5px;
+  transition:transform .25s var(--ease),background .25s var(--ease)}
+.rep:hover{background:rgba(255,255,255,.1)} .rep:active{transform:scale(.96)}
+.rep.on{background:var(--cyan);border-color:var(--cyan);color:#052326;font-weight:600}
+
+.legend{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin-top:4px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:7px;vertical-align:middle}
+.donut-wrap{display:flex;align-items:center;gap:26px;flex-wrap:wrap;justify-content:center}
+.donut-legend{font-size:13px;color:var(--muted);line-height:2}
+.donut-legend b{color:var(--text);font-weight:600;margin-left:6px}
+.foot{font-size:12.5px;color:var(--dim);max-width:80ch;line-height:1.6}
+
+/* setup */
+#setup{display:none;border-bottom:1px solid var(--stroke);background:rgba(255,255,255,.03)}
+#setup.open{display:block}
+.setup-in{max-width:1360px;margin:0 auto;padding:18px 24px}
+.setup-in p{margin:0 0 14px;font-size:13.5px;color:var(--muted);max-width:74ch;line-height:1.6}
+.sg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px}
+.sg label{font-size:12px;color:var(--dim);display:block}
+.sg input{width:100%;margin-top:5px;background:rgba(0,0,0,.28);border:1px solid var(--stroke);border-radius:9px;
+  padding:8px 11px;color:var(--text);font:inherit;font-size:12.5px}
+
+/* entrance motion */
+.in{opacity:0;transform:translateY(14px);animation:rise .62s var(--ease) forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms !important;transition-duration:.001ms !important}
+  .in{opacity:1;transform:none}
+}
+@media (max-width:960px){
+  .hero,.two{grid-template-columns:1fr}
+  .hero-l{border-right:none;border-bottom:1px solid var(--stroke)}
+  .tiles,.tiles.c4,.tiles.c5{grid-template-columns:repeat(2,1fr)}
+  .sg{grid-template-columns:1fr}
+  .call{grid-template-columns:1fr}
+  .call .right{text-align:left}
+}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="bar-in">
+    <div class="mark"><span class="dot pulse" id="dot"></span> Locum OS</div>
+    <div class="seg" id="seg">
+      <div class="seg-ind" id="segInd"></div>
+      <button data-tab="team" class="on">Team</button>
+      <button data-tab="closers">Closers</button>
+      <button data-tab="setters">Setters</button>
+      <button data-tab="calls">Calls</button>
+    </div>
+    <div class="spacer"></div>
+    <span class="chip">From <input type="date" id="from"></span>
+    <span class="chip">To <input type="date" id="to"></span>
+    <button class="btn ghost" id="allTime">All dates</button>
+    <button class="btn" id="refresh">Refresh</button>
+    <button class="btn ghost" id="toggleSetup">Sheets</button>
+    <span id="status">Snapshot · 3 Sep 2026</span>
+  </div>
+</div>
+
+<div id="setup">
+  <div class="setup-in">
+    <p>All three sheet links are filled in already. For live refresh each sheet needs link sharing on
+       (Share → General access → Anyone with the link → Viewer). Without it the dashboard runs on the saved snapshot.</p>
+    <div class="sg">
+      <label>Closer EOD<input type="text" id="closerUrl"></label>
+      <label>Setter EOD<input type="text" id="setterUrl"></label>
+      <label>Closer post-call form<input type="text" id="postUrl"></label>
+    </div>
+    <button class="btn" id="load">Load my data</button>
+    <button class="btn ghost" id="reset">Back to snapshot</button>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="hello">
+    <div>
+      <h1><span id="greet">Good morning</span>, team.<br><span class="accent">Welcome back.</span></h1>
+      <p class="sub" id="subline">Here is where the floor stands right now.</p>
+    </div>
+    <div>
+      <div class="clock tnum" id="clock">—</div>
+      <div class="today" id="today">—</div>
+    </div>
+  </div>
+  <main id="view"></main>
+</div>
+
+<script>
+/* ================= data ================= */
+const SNAPSHOT_CLOSER = `Closer Name,DATE OF EOD,Calls On Calendar,LIve Calls,No Shows ,Rescheduling,Qualified Calls,Offers Made,Deposits,Closed,Followups/Dials,Cash Collected,Total Revenue,Rate Today From 1-10,What objections are coming up that are preventing closes?,Is there anything you are struggling/need help with?
+Ali,2026-08-30,1,1,0,0,1,1,0,1,0,7500,7500,8,None,.
+Ali,2026-08-31,6,4,0,2,3,4,0,0,0,1000,1000,5,Parner/Parent,"doctors want to discuss with their partner before deciding. 
+some doctors objected to price; showed them the money back guarantee, still needed to ""think about it""
+doctors are generally over analyzers, and need to think through things more so than the average entrepreneur whose invested in coaching programs before. 
+
+We should give docs until midnight on the day of to invest at the $7500 price point. 
+
+Payment plan was offered to Omar and Malika; both still politely declined. 
+
+Maybe need to show them more value of the program, so they feel dumb saying no. 
+
+"
+Ali,2026-09-01,3,2,0,1,2,2,0,1,1,2000,8000,7,None,"Nothing today, one who didn’t close is highly qualified used to paying $25k for masterclasses, said he’d be interested in VIP in a few months time, but said he’d be willing to pay for velocity tomorrow; said he didn’t have his card with him. "
+Ali,2026-09-02,2,1,0,1,1,1,0,1,0,7500,7500,8,None,.`;
+
+const SNAPSHOT_SETTER = `Setter Name (Your Name),Date of EOD,Dials,Connections,Qualified Conversations,Sets,Calls on Calendar,Showed Calls,Closed Set,Cash Collected,Total Revenue,Rate Today,What Objections Are Coming Up That Are Preventing Sets,Notes From Today
+Cal,2026-08-31,50,6,6,1,0,1,1,7500,7500,7,Uncertainty,Alexis McCabe 
+Cal,2026-08-31,100,3,0,0,5,5,0,0,0,6,Not Educated enough,N/a
+Cal,2026-09-01,15,2,0,0,3,3,1,2000,8000,5,None,Was travelling so couldn’t really dial but back home and fully ready today `;
+
+const SNAPSHOT_POST = `Submission ID,Respondent ID,Submitted at,Closer,Lead Email (Must Match One In CRM),"Give a brief summary of the call (What they were hoping to get out of this, what was stopping them)And give the outcome (Example: Ended in a fear objection that I couldn't solve, etc)(Please be as detailed as possible)*",Did you make an offer?,What is the lead status?,Cash collected,Total Revenue ,Call Recording
+J1oVAk7,EkeZWM4,2026-08-28 20:42:27,Ali,aymanshoeib18@gmail.com,fsdfsdfsdfsd,TRUE,Closed,5000,5000,https://meet.google.com/home
+2jR4bDe,EkeZWM4,2026-09-02 21:26:49,Ali,aymanshoeib18@gmail.com,Ended in a close.,TRUE,Closed,5000,5000,https://meet.google.com/home
+Z9QdyP0,QKrPbLA,2026-09-02 22:10:21,Ali,test12345@gmail.com,jdgjdhjHDJbsjbSJqbdjbDJbdjbJKDbjkdDjkdl,TRUE,Deposit,1000,1000,"WWW.FATHOM.OC,"
+5XOd56d,QKrPbLA,2026-09-02 22:12:33,Ali,test12345@gmail.com,NDKNDKndkawnfkanfkbnfskfnsknfwknfkl,TRUE,In-House financing,0,2,3
+gbO5XpD,yPylX6d,2026-09-02 22:23:26,Ali,test12345@gmail.com,"dwjebdjbfsklgnol
+hsdihfksnf
+jfojdfw",TRUE,Follow Up ,0,0,www.ftahom.com
+aOlB1XX,yPylX6d,2026-09-02 22:28:30,Ali,test12345@gmail.com,hdhjhdkdhkDJKASBDJASBDJASBDJKA,TRUE,Follow Up ,0,0,0
+4aG20Xb,yPylX6d,2026-09-02 22:29:49,Ali,test12345@gmail.com,safasf,TRUE,Deposit,0,0,www.ftahom.com`;
+
+const IDS = {
+  closer: "1Ogbg8G8xndYDbcBwPEZzujsXgYGvDSjyJJtG89iWBAw",
+  setter: "1gox2hhIPxUI6EKi9V1zx7GqWaYIpt9jXKCkCPNhEtL0",
+  post:   "15k_LyeAZ1vGtIF2sOnHk1zw_6ccCUg6ebkc8rMTgLnk"
+};
+const gviz = id => "https://docs.google.com/spreadsheets/d/" + id + "/gviz/tq?tqx=out:csv";
+
+const CV = k => getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const CO = {cyan:CV('--cyan'), amber:CV('--amber'), coral:CV('--coral'), violet:CV('--violet'),
+            blue:CV('--blue'), stroke:'rgba(255,255,255,.09)', muted:CV('--muted'), dim:CV('--dim')};
+const PIE = [CO.cyan, CO.amber, CO.blue, CO.violet, CO.coral, "#6FE3C4", "#B8C77A"];
+const REDUCE = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ================= helpers ================= */
+const norm = s => String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+const toNum = v => { const n = parseFloat(String(v==null?"":v).replace(/[^0-9.\-]/g,"")); return isNaN(n)?0:n; };
+const money = n => "$" + Math.round(n||0).toLocaleString("en-US");
+const money2 = n => "$" + (n||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const num = n => Math.round(n||0).toLocaleString("en-US");
+const pct = (a,b) => b ? ((a/b)*100).toFixed(1)+"%" : "—";
+const pctN = (a,b) => b ? (a/b)*100 : null;
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const FMT = {
+  money, num, money2,
+  pct: v => v.toFixed(1)+"%",
+  rating: v => v.toFixed(1)+" / 10"
+};
+
+function parseDate(v){
+  if(!v) return null;
+  const s = String(v).trim(); if(!s) return null;
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+  if(m) return new Date(+m[1],+m[2]-1,+m[3],+(m[4]||0),+(m[5]||0),+(m[6]||0));
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(?:[ T](\d{1,2}):(\d{2}))?/);
+  if(m) return new Date(+m[3],+m[1]-1,+m[2],+(m[4]||0),+(m[5]||0));
+  const d = new Date(s); return isNaN(d.getTime()) ? null : d;
+}
+const dkey = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const shortDate = k => { const p=k.split("-"); return p[2]+"/"+p[1]; };
+function ago(d){
+  if(!d) return "";
+  const s = (Date.now()-d.getTime())/1000;
+  if(s < 90) return "just now";
+  if(s < 3600) return Math.round(s/60)+" min ago";
+  if(s < 86400) return Math.round(s/3600)+"h ago";
+  const days = Math.round(s/86400);
+  if(days < 8) return days+"d ago";
+  return d.toLocaleDateString([], {day:"numeric", month:"short"});
+}
+
+function parseCSV(text){
+  const rows=[]; let row=[], cur="", q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(q){ if(ch==='"'){ if(text[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=ch; }
+    else if(ch==='"') q=true;
+    else if(ch===",") { row.push(cur); cur=""; }
+    else if(ch==="\r"){}
+    else if(ch==="\n"){ row.push(cur); rows.push(row); row=[]; cur=""; }
+    else cur+=ch;
+  }
+  if(cur!=="" || row.length){ row.push(cur); rows.push(row); }
+  return rows.filter(r=>r.some(c=>String(c).trim()!==""));
+}
+function toObjects(text){
+  const rows = parseCSV(text); if(!rows.length) return [];
+  const h = rows[0];
+  return rows.slice(1).map(r=>{ const o={}; h.forEach((k,i)=>o[k]=r[i]===undefined?"":r[i]); return o; });
+}
+function pick(headers,cands){
+  for(const c of cands){ const h=headers.find(x=>norm(x)===c); if(h) return h; }
+  for(const c of cands){ const h=headers.find(x=>norm(x).includes(c)); if(h) return h; }
+  return null;
+}
+const CLOSER_MAP = {
+  name:["closername","name"], date:["dateofeod","date"],
+  callsBooked:["callsoncalendar","callsoncalend","oncalendar"],
+  showed:["livecalls","showedcalls","callsthatshowed"], noShows:["noshows"],
+  reschedules:["rescheduling","reschedules"], qualified:["qualifiedcalls","qualified"],
+  offers:["offersmade","offers"], deposits:["deposits","deposit"], closed:["closed","closes"],
+  followups:["followupsdials","followups"], cash:["cashcollected","cash"], revenue:["totalrevenue","revenue"],
+  rate:["ratetoday","ratetodayfrom110","rate"], objection:["whatobjections","objections","objection"],
+  notes:["isthereanythingyouarestrugglingneedhelpwith","struggling","notes"]
+};
+const SETTER_MAP = {
+  name:["settername","setternameyourname","name"], date:["dateofeod","date"], dials:["dials"],
+  connections:["connections"], qualConvos:["qualifiedconversations","qualifiedconve","qualifiedconvos","qualified"],
+  sets:["sets"], callsBooked:["callsoncalendar","callsoncalend"], showed:["showedcalls","showed"],
+  closedSets:["closedset","closedsets","closed"], cash:["cashcollected","cash"], revenue:["totalrevenue","revenue"],
+  rate:["ratetoday","rate"], objection:["whatobjections","objections","objection"], notes:["notesfromtoday","notes"]
+};
+const POST_MAP = {
+  id:["submissionid"], date:["submittedat","timestamp","date"], name:["closer"],
+  lead:["leademail","email"], summary:["giveabriefsummary","summary"],
+  offer:["didyoumakeanoffer","offer"], status:["whatistheleadstatus","leadstatus","status"],
+  cash:["cashcollected"], revenue:["totalrevenue"], rec:["callrecording","recording"]
+};
+const NUMERIC = new Set(["callsBooked","showed","noShows","reschedules","qualified","offers","deposits","closed",
+  "followups","cash","revenue","rate","dials","connections","qualConvos","sets","closedSets"]);
+
+function shape(rows,map,numeric){
+  if(!rows.length) return [];
+  const headers = Object.keys(rows[0]); const cols={};
+  for(const f in map) cols[f] = pick(headers, map[f]);
+  return rows.map(r=>{
+    const o={};
+    for(const f in cols){
+      const raw = cols[f] ? r[cols[f]] : "";
+      o[f] = (numeric||NUMERIC).has(f) ? toNum(raw) : String(raw==null?"":raw).trim();
+    }
+    o._date = parseDate(cols.date ? r[cols.date] : "");
+    o._key = o._date ? dkey(o._date) : "";
+    return o;
+  }).filter(r=>r.name || r._date);
+}
+const POST_NUM = new Set(["cash","revenue"]);
+
+/* ================= aggregation ================= */
+const sum = (rows,k)=>rows.reduce((a,r)=>a+(r[k]||0),0);
+function avgRate(rows){ const v=rows.map(r=>r.rate).filter(x=>x>0); return v.length? v.reduce((a,b)=>a+b,0)/v.length : null; }
+const closerStats = r => ({entries:r.length, callsBooked:sum(r,"callsBooked"), showed:sum(r,"showed"),
+  noShows:sum(r,"noShows"), reschedules:sum(r,"reschedules"), qualified:sum(r,"qualified"), offers:sum(r,"offers"),
+  deposits:sum(r,"deposits"), closed:sum(r,"closed"), followups:sum(r,"followups"), cash:sum(r,"cash"),
+  revenue:sum(r,"revenue"), rate:avgRate(r)});
+const setterStats = r => ({entries:r.length, dials:sum(r,"dials"), connections:sum(r,"connections"),
+  qualConvos:sum(r,"qualConvos"), sets:sum(r,"sets"), callsBooked:sum(r,"callsBooked"), showed:sum(r,"showed"),
+  closedSets:sum(r,"closedSets"), cash:sum(r,"cash"), revenue:sum(r,"revenue"), rate:avgRate(r)});
+function timeline(rows){
+  const by={};
+  rows.forEach(r=>{ if(!r._key) return;
+    by[r._key]=by[r._key]||{day:r._key,cash:0,revenue:0};
+    by[r._key].cash+=r.cash||0; by[r._key].revenue+=r.revenue||0; });
+  return Object.values(by).sort((a,b)=>a.day<b.day?-1:1).map(d=>({...d,label:shortDate(d.day)}));
+}
+function objections(rows){
+  const c={};
+  rows.forEach(r=>{ const v=(r.objection||"").trim();
+    if(!v||v==="."||v.toLowerCase()==="n/a") return; c[v]=(c[v]||0)+1; });
+  return Object.entries(c).map(([name,value])=>({name,value})).sort((a,b)=>b.value-a.value);
+}
+function statusCounts(rows){
+  const c={};
+  rows.forEach(r=>{ const v=(r.status||"").trim(); if(!v) return; c[v]=(c[v]||0)+1; });
+  return Object.entries(c).map(([name,value])=>({name,value})).sort((a,b)=>b.value-a.value);
+}
+const namesOf = rows => [...new Set(rows.map(r=>r.name).filter(Boolean))].sort();
+const pillClass = s => { const t=norm(s);
+  return t.includes("closed")?"closed": t.includes("deposit")?"deposit":
+         t.includes("follow")?"follow": t.includes("financ")?"finance":"other"; };
+const linkify = u => {
+  const s=String(u||"").trim();
+  if(!s || !s.includes(".") || s.length < 5) return "";
+  const href = /^https?:\/\//i.test(s) ? s : "https://" + s.replace(/^\/+/,"");
+  return `<a class="rec" href="${esc(href)}" target="_blank" rel="noopener">Recording ↗</a>`;
+};
+
+/* ================= charts ================= */
+function niceMax(v){ if(v<=0) return 1;
+  const e=Math.pow(10,Math.floor(Math.log10(v))), f=v/e;
+  return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*e; }
+
+function lineChart(box, data){
+  if(!data.length){ box.innerHTML='<div class="empty">No entries in this range.</div>'; return; }
+  const W=Math.max(320,box.clientWidth), H=232, P={l:54,r:16,t:16,b:30};
+  const max=niceMax(Math.max(1,...data.map(d=>Math.max(d.cash,d.revenue))));
+  const X=i=>data.length>1? P.l+i*(W-P.l-P.r)/(data.length-1) : P.l+(W-P.l-P.r)/2;
+  const Y=v=>H-P.b-(v/max)*(H-P.t-P.b);
+  let g="";
+  for(let i=0;i<=4;i++){
+    const v=max*i/4, y=Y(v);
+    g+=`<line x1="${P.l}" y1="${y}" x2="${W-P.r}" y2="${y}" stroke="${CO.stroke}"/>`;
+    g+=`<text x="${P.l-10}" y="${y+4}" fill="${CO.dim}" font-size="11" text-anchor="end">$${v/1000}k</text>`;
+  }
+  data.forEach((d,i)=> g+=`<text x="${X(i)}" y="${H-9}" fill="${CO.dim}" font-size="11" text-anchor="middle">${d.label}</text>`);
+  let paths="";
+  [["revenue",CO.amber],["cash",CO.cyan]].forEach(([k,col],si)=>{
+    const pts=data.map((d,i)=>X(i)+","+Y(d[k])).join(" ");
+    const area=`${P.l},${H-P.b} ${pts} ${X(data.length-1)},${H-P.b}`;
+    paths+=`<polygon points="${area}" fill="${col}" opacity=".07"/>`;
+    paths+=`<polyline class="ln" points="${pts}" fill="none" stroke="${col}" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round"/>`;
+    data.forEach((d,i)=> paths+=`<circle class="pt" style="animation-delay:${.45+i*.06+si*.05}s" cx="${X(i)}" cy="${Y(d[k])}" r="3.6"
+      fill="${col}"><title>${d.label} · ${money(d[k])}</title></circle>`);
+  });
+  box.innerHTML=`<svg width="${W}" height="${H}" style="max-width:100%;overflow:visible">${g}${paths}</svg>
+    <div class="legend"><span><i style="background:${CO.cyan}"></i>Cash collected</span>
+    <span><i style="background:${CO.amber}"></i>Revenue</span></div>`;
+  if(REDUCE) return;
+  box.querySelectorAll(".pt").forEach(c=>{ c.style.opacity=0; c.style.animation="rise .4s var(--ease) forwards"; });
+  box.querySelectorAll(".ln").forEach(p=>{
+    const L=p.getTotalLength();
+    p.style.strokeDasharray=L; p.style.strokeDashoffset=L;
+    p.getBoundingClientRect();
+    p.style.transition="stroke-dashoffset 1.15s var(--ease)";
+    p.style.strokeDashoffset=0;
+  });
+}
+
+function donut(box, items){
+  if(!items.length){ box.innerHTML='<div class="empty">Nothing logged yet.</div>'; return; }
+  const size=196, r=86, ri=52, c=size/2, total=items.reduce((a,b)=>a+b.value,0);
+  const legend=items.map((it,i)=>
+    `<div><i style="display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:9px;background:${PIE[i%PIE.length]}"></i>${esc(it.name)}<b>${it.value}</b></div>`).join("");
+  box.innerHTML=`<div class="donut-wrap"><svg id="dn" width="${size}" height="${size}"></svg><div class="donut-legend">${legend}</div></div>`;
+  const svg=box.querySelector("#dn");
+  const draw=p=>{
+    let a0=-Math.PI/2, s="";
+    items.forEach((it,i)=>{
+      const a1=a0+(it.value/total)*Math.PI*2*p;
+      if(a1-a0 > .0001){
+        const big=(a1-a0)>Math.PI?1:0, pt=(rad,a)=>[c+rad*Math.cos(a), c+rad*Math.sin(a)];
+        const [x1,y1]=pt(r,a0),[x2,y2]=pt(r,a1),[x3,y3]=pt(ri,a1),[x4,y4]=pt(ri,a0);
+        s+=`<path d="M${x1} ${y1} A${r} ${r} 0 ${big} 1 ${x2} ${y2} L${x3} ${y3} A${ri} ${ri} 0 ${big} 0 ${x4} ${y4} Z"
+             fill="${PIE[i%PIE.length]}"><title>${esc(it.name)} · ${it.value}</title></path>`;
+      }
+      a0 += (it.value/total)*Math.PI*2*p;
+    });
+    svg.innerHTML=s;
+  };
+  if(REDUCE){ draw(1); return; }
+  const t0=performance.now();
+  (function step(t){
+    const p=Math.min(1,(t-t0)/850), e=1-Math.pow(1-p,3);
+    draw(e); if(p<1) requestAnimationFrame(step);
+  })(t0);
+}
+
+function bars(items, valKey, color, fmt){
+  if(!items.length) return '<div class="empty">No reps in this range.</div>';
+  const max=Math.max(1,...items.map(i=>i[valKey]));
+  return items.map((it,i)=>`<div class="lb"><div class="who">${esc(it.name)}</div>
+    <div class="track"><div class="fill" data-w="${Math.max((it[valKey]/max)*100,2)}"
+      style="transition-delay:${i*70}ms;background:linear-gradient(90deg,${color}66,${color})"></div></div>
+    <div class="v tnum">${fmt(it[valKey])}</div></div>`).join("");
+}
+function funnel(steps){
+  const top=Math.max(1,...steps.map(s=>s.value));
+  return steps.map((s,i)=>{
+    const prev=i>0?steps[i-1].value:null, last=i===steps.length-1;
+    return `<div class="fn${last?" last":""}"><div class="name">${esc(s.label)}</div>
+      <div class="track"><div class="fill" data-w="${Math.max((s.value/top)*100, s.value>0?3:0)}"
+        style="transition-delay:${i*80}ms"></div></div>
+      <div class="n tnum" data-n="${s.value}" data-fmt="num">0</div>
+      <div class="p tnum">${prev!==null?pct(s.value,prev):""}</div></div>`;
+  }).join("");
+}
+
+/* ================= state ================= */
+const KEY = "locumos_state_v2";
+const S = {
+  closer:[], setter:[], post:[], tab:"team",
+  from:"", to:"", closerPick:"All", setterPick:"All", rangeTouched:false,
+  urls:{closer:gviz(IDS.closer), setter:gviz(IDS.setter), post:gviz(IDS.post)}
+};
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify({
+    tab:S.tab, from:S.from, to:S.to, closerPick:S.closerPick, setterPick:S.setterPick,
+    rangeTouched:S.rangeTouched, urls:S.urls })); }catch(e){}
+}
+function restore(){
+  try{
+    const s = JSON.parse(localStorage.getItem(KEY)||"null"); if(!s) return;
+    if(s.tab) S.tab=s.tab;
+    if(s.closerPick) S.closerPick=s.closerPick;
+    if(s.setterPick) S.setterPick=s.setterPick;
+    if(s.urls) S.urls=s.urls;
+    if(s.rangeTouched){ S.rangeTouched=true; S.from=s.from||""; S.to=s.to||""; }
+  }catch(e){}
+}
+
+function applyData(c,s,p){
+  S.closer = shape(toObjects(c), CLOSER_MAP);
+  S.setter = shape(toObjects(s), SETTER_MAP);
+  S.post   = shape(toObjects(p), POST_MAP, POST_NUM)
+               .sort((a,b)=> (b._date?b._date.getTime():0) - (a._date?a._date.getTime():0));
+  if(!S.rangeTouched){
+    const days=[...S.closer,...S.setter,...S.post].map(r=>r._key).filter(Boolean).sort();
+    if(days.length){ S.from=days[0]; S.to=days[days.length-1]; }
+  }
+  document.getElementById("from").value=S.from;
+  document.getElementById("to").value=S.to;
+}
+function setStatus(msg,cls){ const el=document.getElementById("status"); el.textContent=msg; el.className=cls||""; }
+
+async function fetchCsv(url){
+  const res = await fetch(url, {cache:"no-store"});
+  if(!res.ok) throw new Error(res.status===401||res.status===403
+    ? "Google blocked the request — the sheets need link sharing turned on."
+    : "A sheet returned " + res.status + ".");
+  const t = await res.text();
+  if(t.trim().startsWith("<")) throw new Error("Got a web page, not CSV. Turn on link sharing for the sheets.");
+  return t;
+}
+async function loadLive(){
+  setStatus("Loading…");
+  document.getElementById("dot").classList.add("pulse");
+  try{
+    const [c,s,p] = await Promise.all([fetchCsv(S.urls.closer), fetchCsv(S.urls.setter), fetchCsv(S.urls.post)]);
+    applyData(c,s,p);
+    setStatus("Live · " + new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}), "live");
+    save(); render();
+  }catch(err){ setStatus(err.message, "err"); }
+}
+
+/* ================= render ================= */
+const inRange = r => r._key && (!S.from || r._key>=S.from) && (!S.to || r._key<=S.to);
+const stat = (label,value,opts={}) =>
+  `<div class="tile${opts.accent?" accent":""}">
+     <div class="lbl">${esc(label)}</div>
+     <div class="v tnum"${opts.tone?` style="color:${opts.tone}"`:""}${
+       opts.n!==undefined&&opts.n!==null?` data-n="${opts.n}" data-fmt="${opts.fmt||'num'}"`:""
+     }>${opts.n!==undefined&&opts.n!==null?"0":esc(value)}</div>
+   </div>`;
+const card = (title,note,inner,flush,delay=0) =>
+  `<section class="card in" style="animation-delay:${delay}ms">
+     ${title?`<header><h2>${esc(title)}</h2>${note?`<span class="note">${esc(note)}</span>`:""}</header>`:""}
+     <div class="body${flush?" flush":""}">${inner}</div></section>`;
+function table(rows,cols){
+  if(!rows.length) return '<div class="empty">Nothing logged in this range.</div>';
+  return `<div class="scroll"><table><thead><tr>${cols.map(c=>`<th>${esc(c.h)}</th>`).join("")}</tr></thead><tbody>`+
+    rows.map(r=>`<tr>${cols.map(c=>`<td class="${c.wide?"wide":""}">${esc(c.f?c.f(r):r[c.k])}</td>`).join("")}</tr>`).join("")+
+    `</tbody></table></div>`;
+}
+function repBar(label,names,current,attr){
+  return `<div class="reps in"><span class="cap">${label}</span>`+
+    ["All",...names].map(n=>`<button class="rep${current===n?" on":""}" data-${attr}="${esc(n)}">${esc(n)}</button>`).join("")+
+    `</div>`;
+}
+function callRow(r){
+  return `<div class="call">
+    <div class="when">${esc(ago(r._date))}</div>
+    <div>
+      <div class="who">${esc(r.name||"—")} <span class="pill ${pillClass(r.status)}">${esc((r.status||"—").trim())}</span></div>
+      <div class="lead">${esc(r.lead||"")}</div>
+      ${r.summary?`<div class="sum">${esc(r.summary)}</div>`:""}
+      ${linkify(r.rec)}
+    </div>
+    <div class="right">
+      <div class="lbl">${r._date? r._date.toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}) : ""}</div>
+      <div class="cash tnum" style="color:${r.cash>0?CO.cyan:CO.dim}">${money(r.cash)}</div>
+    </div></div>`;
+}
+
+function render(){
+  const cIn=S.closer.filter(inRange), sIn=S.setter.filter(inRange), pIn=S.post.filter(inRange);
+  const view=document.getElementById("view"); const after=[];
+  let d=0; const D=()=> (d+=60);
+
+  if(S.tab==="team"){
+    const cs=closerStats(cIn), ss=setterStats(sIn);
+    const board=namesOf(S.closer).map(n=>({name:n,...closerStats(cIn.filter(r=>r.name===n))}))
+      .filter(r=>r.cash||r.closed||r.showed).sort((a,b)=>b.cash-a.cash);
+    const sboard=namesOf(S.setter).map(n=>({name:n,...setterStats(sIn.filter(r=>r.name===n))}))
+      .filter(r=>r.sets||r.dials).sort((a,b)=>b.sets-a.sets);
+    const latest=pIn[0];
+
+    view.innerHTML =
+      `<section class="card hero in">
+        <div class="hero-l">
+          <div class="lbl">Cash collected</div>
+          <div class="big tnum" data-n="${cs.cash}" data-fmt="money">0</div>
+          <div class="lbl" style="margin-top:8px">of ${money(cs.revenue)} contracted · ${pct(cs.cash,cs.revenue)} collected</div>
+          <div class="mini-row">
+            <div class="mini"><div class="lbl">Closes</div><div class="val tnum" data-n="${cs.closed}" data-fmt="num">0</div></div>
+            <div class="mini"><div class="lbl">Calls taken</div><div class="val tnum" data-n="${cs.showed}" data-fmt="num">0</div></div>
+            <div class="mini"><div class="lbl">Sets booked</div><div class="val tnum" data-n="${ss.sets}" data-fmt="num">0</div></div>
+          </div>
+        </div>
+        <div class="hero-r"><div id="ch1"></div></div>
+      </section>` +
+      (latest ? card("Most recent call", ago(latest._date), `<div class="calls" style="margin:-16px -19px -19px">${callRow(latest)}</div>`, false, D()) : "") +
+      card("Pipeline, first dial to signed","Setter activity feeding closer results", funnel([
+        {label:"Dials",value:ss.dials},{label:"Connections",value:ss.connections},
+        {label:"Qualified convos",value:ss.qualConvos},{label:"Sets booked",value:ss.sets},
+        {label:"Calls on calendar",value:cs.callsBooked},{label:"Calls showed",value:cs.showed},
+        {label:"Offers made",value:cs.offers},{label:"Closed",value:cs.closed}
+      ]), false, D()) +
+      card("Team rates","", `<div class="tiles">`+[
+        stat("Show rate", pct(cs.showed,cs.callsBooked), {n:pctN(cs.showed,cs.callsBooked), fmt:"pct"}),
+        stat("Offer rate", pct(cs.offers,cs.showed), {n:pctN(cs.offers,cs.showed), fmt:"pct"}),
+        stat("Close rate", pct(cs.closed,cs.showed), {n:pctN(cs.closed,cs.showed), fmt:"pct"}),
+        stat("Offer to close", pct(cs.closed,cs.offers), {n:pctN(cs.closed,cs.offers), fmt:"pct"}),
+        stat("Cash collection", pct(cs.cash,cs.revenue), {n:pctN(cs.cash,cs.revenue), fmt:"pct"}),
+        stat("Cash per call showed", cs.showed?money(cs.cash/cs.showed):"—", {n:cs.showed?cs.cash/cs.showed:null, fmt:"money", tone:CO.cyan}),
+        stat("Connect rate", pct(ss.connections,ss.dials), {n:pctN(ss.connections,ss.dials), fmt:"pct"}),
+        stat("Convo to set", pct(ss.sets,ss.connections), {n:pctN(ss.sets,ss.connections), fmt:"pct"}),
+        stat("Qualified to set", pct(ss.sets,ss.qualConvos), {n:pctN(ss.sets,ss.qualConvos), fmt:"pct"}),
+        stat("No shows","",{n:cs.noShows}),
+        stat("Reschedules","",{n:cs.reschedules}),
+        stat("Avg day rating", "—", {n:avgRate([...cIn,...sIn]), fmt:"rating", accent:true})
+      ].join("")+`</div>`, false, D()) +
+      `<div class="two">
+        ${card("Cash by closer","", bars(board,"cash",CO.cyan,money), false, D())}
+        ${card("Sets by setter","", bars(sboard,"sets",CO.amber,num), false, D())}
+      </div>` +
+      `<div class="two">
+        ${card("Objections","Both teams",'<div id="ch2"></div>', false, D())}
+        ${card("Call outcomes","From the post-call form",'<div id="ch3"></div>', false, D())}
+      </div>` +
+      card("Latest calls", pIn.length+" in this range",
+        `<div class="calls">${pIn.slice(0,6).map(callRow).join("") || '<div class="empty">No calls logged in this range.</div>'}</div>`,
+        true, D()) +
+      `<p class="foot in" style="animation-delay:${D()}ms">Team cash and revenue come from the closer EOD sheet so the same deal is never
+       counted twice. The post-call form feeds the calls feed and outcome mix.</p>`;
+
+    after.push(()=>lineChart(document.getElementById("ch1"), timeline(cIn)));
+    after.push(()=>donut(document.getElementById("ch2"), objections([...cIn,...sIn])));
+    after.push(()=>donut(document.getElementById("ch3"), statusCounts(pIn)));
+  }
+
+  if(S.tab==="closers"){
+    const sel = S.closerPick==="All"? cIn : cIn.filter(r=>r.name===S.closerPick);
+    const pSel = S.closerPick==="All"? pIn : pIn.filter(r=>norm(r.name)===norm(S.closerPick));
+    const c1 = closerStats(sel);
+    view.innerHTML =
+      repBar("Closer", namesOf(S.closer), S.closerPick, "closer") +
+      card((S.closerPick==="All"?"All closers":S.closerPick)+" — volume", c1.entries+" end-of-day reports",
+        `<div class="tiles">`+[
+          stat("Calls on calendar","",{n:c1.callsBooked}),
+          stat("Calls showed","",{n:c1.showed}),
+          stat("No shows","",{n:c1.noShows}),
+          stat("Reschedules","",{n:c1.reschedules}),
+          stat("Qualified calls","",{n:c1.qualified}),
+          stat("Offers made","",{n:c1.offers}),
+          stat("Deposits","",{n:c1.deposits}),
+          stat("Closed","",{n:c1.closed}),
+          stat("Followups / dials","",{n:c1.followups}),
+          stat("Cash collected","",{n:c1.cash, fmt:"money", tone:CO.cyan}),
+          stat("Revenue contracted","",{n:c1.revenue, fmt:"money"}),
+          stat("Avg day rating","—",{n:c1.rate, fmt:"rating", accent:true})
+        ].join("")+`</div>`, false, D()) +
+      card("Conversion and cash efficiency","", `<div class="tiles c4">`+[
+        stat("Show rate", pct(c1.showed,c1.callsBooked), {n:pctN(c1.showed,c1.callsBooked), fmt:"pct"}),
+        stat("Offer rate", pct(c1.offers,c1.showed), {n:pctN(c1.offers,c1.showed), fmt:"pct"}),
+        stat("Close rate", pct(c1.closed,c1.showed), {n:pctN(c1.closed,c1.showed), fmt:"pct"}),
+        stat("Offer to close", pct(c1.closed,c1.offers), {n:pctN(c1.closed,c1.offers), fmt:"pct"}),
+        stat("Cash per call booked", c1.callsBooked?money2(c1.cash/c1.callsBooked):"—", {n:c1.callsBooked?c1.cash/c1.callsBooked:null, fmt:"money2"}),
+        stat("Cash per call showed", c1.showed?money2(c1.cash/c1.showed):"—", {n:c1.showed?c1.cash/c1.showed:null, fmt:"money2"}),
+        stat("Cash per close", c1.closed?money2(c1.cash/c1.closed):"—", {n:c1.closed?c1.cash/c1.closed:null, fmt:"money2"}),
+        stat("Cash collection rate", pct(c1.cash,c1.revenue), {n:pctN(c1.cash,c1.revenue), fmt:"pct"})
+      ].join("")+`</div>`, false, D()) +
+      `<div class="two">
+        ${card("Cash and revenue by day","",'<div id="ch1"></div>', false, D())}
+        ${card("Objections heard","",'<div id="ch2"></div>', false, D())}
+      </div>` +
+      card("Recent calls", pSel.length+" logged",
+        `<div class="calls">${pSel.slice(0,8).map(callRow).join("") || '<div class="empty">No calls logged in this range.</div>'}</div>`,
+        true, D()) +
+      card("Daily reports","", table([...sel].sort((a,b)=>a._key<b._key?1:-1), [
+        {k:"_key",h:"Date"},{k:"name",h:"Closer"},{k:"callsBooked",h:"Booked"},{k:"showed",h:"Showed"},
+        {k:"offers",h:"Offers"},{k:"closed",h:"Closed"},{k:"cash",h:"Cash",f:r=>money(r.cash)},
+        {k:"revenue",h:"Revenue",f:r=>money(r.revenue)},{k:"rate",h:"Rating"},
+        {k:"objection",h:"Objection",wide:true},{k:"notes",h:"Notes",wide:true}
+      ]), true, D());
+    after.push(()=>lineChart(document.getElementById("ch1"), timeline(sel)));
+    after.push(()=>donut(document.getElementById("ch2"), objections(sel)));
+  }
+
+  if(S.tab==="setters"){
+    const sel = S.setterPick==="All"? sIn : sIn.filter(r=>r.name===S.setterPick);
+    const s1 = setterStats(sel);
+    view.innerHTML =
+      repBar("Setter", namesOf(S.setter), S.setterPick, "setter") +
+      card((S.setterPick==="All"?"All setters":S.setterPick)+" — activity", s1.entries+" end-of-day reports",
+        `<div class="tiles c5">`+[
+          stat("Dials","",{n:s1.dials}),
+          stat("Connections","",{n:s1.connections}),
+          stat("Qualified convos","",{n:s1.qualConvos}),
+          stat("Sets booked","",{n:s1.sets}),
+          stat("Calls on calendar","",{n:s1.callsBooked}),
+          stat("Calls showed","",{n:s1.showed}),
+          stat("Sets that closed","",{n:s1.closedSets}),
+          stat("Cash produced","",{n:s1.cash, fmt:"money", tone:CO.cyan}),
+          stat("Revenue produced","",{n:s1.revenue, fmt:"money"}),
+          stat("Avg day rating","—",{n:s1.rate, fmt:"rating", accent:true})
+        ].join("")+`</div>`, false, D()) +
+      card("Conversion and cash efficiency","", `<div class="tiles c4">`+[
+        stat("Connect rate", pct(s1.connections,s1.dials), {n:pctN(s1.connections,s1.dials), fmt:"pct"}),
+        stat("Convo to set", pct(s1.sets,s1.connections), {n:pctN(s1.sets,s1.connections), fmt:"pct"}),
+        stat("Qualified to set", pct(s1.sets,s1.qualConvos), {n:pctN(s1.sets,s1.qualConvos), fmt:"pct"}),
+        stat("Set to close", pct(s1.closedSets,s1.sets), {n:pctN(s1.closedSets,s1.sets), fmt:"pct"}),
+        stat("Showed to close", pct(s1.closedSets,s1.showed), {n:pctN(s1.closedSets,s1.showed), fmt:"pct"}),
+        stat("Cash per set", s1.sets?money2(s1.cash/s1.sets):"—", {n:s1.sets?s1.cash/s1.sets:null, fmt:"money2"}),
+        stat("Cash per call showed", s1.showed?money2(s1.cash/s1.showed):"—", {n:s1.showed?s1.cash/s1.showed:null, fmt:"money2"}),
+        stat("Cash collection rate", pct(s1.cash,s1.revenue), {n:pctN(s1.cash,s1.revenue), fmt:"pct"})
+      ].join("")+`</div>`, false, D()) +
+      `<div class="two">
+        ${card("Cash and revenue by day","",'<div id="ch1"></div>', false, D())}
+        ${card("Objections on the phones","",'<div id="ch2"></div>', false, D())}
+      </div>` +
+      card("Daily reports","", table([...sel].sort((a,b)=>a._key<b._key?1:-1), [
+        {k:"_key",h:"Date"},{k:"name",h:"Setter"},{k:"dials",h:"Dials"},{k:"connections",h:"Connects"},
+        {k:"qualConvos",h:"Qualified"},{k:"sets",h:"Sets"},{k:"showed",h:"Showed"},{k:"closedSets",h:"Closed"},
+        {k:"cash",h:"Cash",f:r=>money(r.cash)},{k:"rate",h:"Rating"},
+        {k:"objection",h:"Objection",wide:true},{k:"notes",h:"Notes",wide:true}
+      ]), true, D());
+    after.push(()=>lineChart(document.getElementById("ch1"), timeline(sel)));
+    after.push(()=>donut(document.getElementById("ch2"), objections(sel)));
+  }
+
+  if(S.tab==="calls"){
+    const sel = S.closerPick==="All"? pIn : pIn.filter(r=>norm(r.name)===norm(S.closerPick));
+    const cash = sum(sel,"cash"), rev = sum(sel,"revenue");
+    const offers = sel.filter(r=>norm(r.offer)==="true").length;
+    const closes = sel.filter(r=>norm(r.status).includes("closed")).length;
+    view.innerHTML =
+      repBar("Closer", namesOf(S.post), S.closerPick, "closer") +
+      card("Calls logged", S.from+" to "+S.to, `<div class="tiles c5">`+[
+        stat("Calls logged","",{n:sel.length}),
+        stat("Offers made","",{n:offers}),
+        stat("Closed","",{n:closes}),
+        stat("Close rate", pct(closes,sel.length), {n:pctN(closes,sel.length), fmt:"pct"}),
+        stat("Cash collected","",{n:cash, fmt:"money", tone:CO.cyan})
+      ].join("")+`</div>`, false, D()) +
+      `<div class="two">
+        ${card("Outcome mix","",'<div id="ch3"></div>', false, D())}
+        ${card("Cash by outcome","", bars(
+          statusCounts(sel).map(o=>({name:o.name, cash:sum(sel.filter(r=>r.status===o.name),"cash")})),
+          "cash", CO.cyan, money), false, D())}
+      </div>` +
+      card("Every call, newest first", sel.length+" calls",
+        `<div class="calls">${sel.map(callRow).join("") || '<div class="empty">No calls in this range.</div>'}</div>`,
+        true, D());
+    after.push(()=>donut(document.getElementById("ch3"), statusCounts(sel)));
+  }
+
+  requestAnimationFrame(()=>{
+    after.forEach(fn=>fn());
+    view.querySelectorAll(".fill[data-w]").forEach(el=>{ el.style.width = el.dataset.w+"%"; });
+    countUp(view);
+  });
+  window._redraw = after;
+}
+
+function countUp(root){
+  root.querySelectorAll("[data-n]").forEach((el,i)=>{
+    const to = parseFloat(el.dataset.n); const f = FMT[el.dataset.fmt] || FMT.num;
+    if(isNaN(to)){ el.textContent = "—"; return; }
+    if(REDUCE){ el.textContent = f(to); return; }
+    const dur = 800, delay = Math.min(i*28, 420), t0 = performance.now()+delay;
+    (function step(t){
+      const p = Math.min(1, Math.max(0,(t-t0)/dur)), e = 1-Math.pow(1-p,3);
+      el.textContent = f(to*e);
+      if(p<1) requestAnimationFrame(step); else el.textContent = f(to);
+    })(performance.now());
+  });
+}
+
+/* ================= chrome ================= */
+function moveInd(){
+  const on = document.querySelector(".seg button.on"); if(!on) return;
+  const ind = document.getElementById("segInd");
+  ind.style.width = on.offsetWidth+"px";
+  ind.style.transform = "translateX("+on.offsetLeft+"px)";
+}
+function tick(){
+  const now=new Date(), h=now.getHours();
+  document.getElementById("greet").textContent = h<12?"Good morning":h<17?"Good afternoon":"Good evening";
+  document.getElementById("clock").textContent = now.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
+  document.getElementById("today").textContent = now.toLocaleDateString([], {weekday:"long",day:"numeric",month:"long"});
+}
+
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".seg button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on"); S.tab=b.dataset.tab; moveInd(); save(); render();
+}));
+document.getElementById("view").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  if(b.dataset.closer!==undefined){ S.closerPick=b.dataset.closer; save(); render(); }
+  if(b.dataset.setter!==undefined){ S.setterPick=b.dataset.setter; save(); render(); }
+});
+document.getElementById("from").addEventListener("change", e=>{ S.from=e.target.value; S.rangeTouched=true; save(); render(); });
+document.getElementById("to").addEventListener("change", e=>{ S.to=e.target.value; S.rangeTouched=true; save(); render(); });
+document.getElementById("allTime").addEventListener("click", ()=>{
+  S.rangeTouched=false;
+  const days=[...S.closer,...S.setter,...S.post].map(r=>r._key).filter(Boolean).sort();
+  if(days.length){ S.from=days[0]; S.to=days[days.length-1]; }
+  document.getElementById("from").value=S.from; document.getElementById("to").value=S.to;
+  save(); render();
+});
+document.getElementById("toggleSetup").addEventListener("click", e=>{
+  const p=document.getElementById("setup"); p.classList.toggle("open");
+  e.target.textContent = p.classList.contains("open") ? "Hide" : "Sheets";
+});
+document.getElementById("refresh").addEventListener("click", loadLive);
+document.getElementById("load").addEventListener("click", ()=>{
+  S.urls = {
+    closer: document.getElementById("closerUrl").value.trim(),
+    setter: document.getElementById("setterUrl").value.trim(),
+    post:   document.getElementById("postUrl").value.trim()
+  };
+  save(); loadLive();
+});
+document.getElementById("reset").addEventListener("click", ()=>{
+  applyData(SNAPSHOT_CLOSER, SNAPSHOT_SETTER, SNAPSHOT_POST);
+  setStatus("Snapshot · 3 Sep 2026"); render();
+});
+let rt; window.addEventListener("resize", ()=>{
+  clearTimeout(rt); rt=setTimeout(()=>{ moveInd(); (window._redraw||[]).forEach(f=>f()); }, 160);
+});
+document.addEventListener("visibilitychange", ()=>{
+  if(document.visibilityState!=="visible") return;
+  tick();
+  if(document.getElementById("status").classList.contains("live")) loadLive();
+});
+
+/* ================= boot ================= */
+tick(); setInterval(tick, 20000);
+restore();
+document.querySelectorAll(".seg button").forEach(b=>{
+  b.classList.toggle("on", b.dataset.tab===S.tab);
+});
+document.getElementById("closerUrl").value = S.urls.closer;
+document.getElementById("setterUrl").value = S.urls.setter;
+document.getElementById("postUrl").value   = S.urls.post;
+applyData(SNAPSHOT_CLOSER, SNAPSHOT_SETTER, SNAPSHOT_POST);
+render();
+requestAnimationFrame(moveInd);
+setTimeout(moveInd, 300);
+setInterval(()=>{ if(document.getElementById("status").classList.contains("live")) loadLive(); }, 300000);
+</script>
+</body>
+</html>
