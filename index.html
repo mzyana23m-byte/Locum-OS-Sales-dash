@@ -188,6 +188,18 @@ td.wide{white-space:pre-wrap;font-size:12.5px;max-width:320px;font-variant-numer
 .sg input{width:100%;margin-top:5px;background:rgba(0,0,0,.28);border:1px solid var(--stroke);border-radius:9px;
   padding:8px 11px;color:var(--text);font:inherit;font-size:12.5px}
 
+/* forecast */
+.goal{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:18px;
+  padding-top:16px;border-top:1px solid var(--stroke)}
+.goal label{font-size:12.5px;color:var(--muted)}
+.goalin{background:rgba(0,0,0,.28);border:1px solid var(--stroke);border-radius:9px;padding:7px 11px;
+  color:var(--text);font:inherit;font-size:13px;width:130px;font-variant-numeric:tabular-nums}
+.goalbar{flex:1;min-width:160px;height:9px;background:rgba(255,255,255,.07);border-radius:999px;overflow:hidden}
+.goalfill{height:100%;width:0;border-radius:999px;transition:width 1s var(--ease);
+  background:linear-gradient(90deg,rgba(45,212,206,.5),var(--cyan))}
+.verdict{font-size:13px;font-weight:600}
+.verdict.ahead{color:var(--cyan)} .verdict.behind{color:var(--amber)}
+
 /* entrance motion */
 .in{opacity:0;transform:translateY(14px);animation:rise .62s var(--ease) forwards}
 @keyframes rise{to{opacity:1;transform:none}}
@@ -215,6 +227,7 @@ td.wide{white-space:pre-wrap;font-size:12.5px;max-width:320px;font-variant-numer
       <button data-tab="team" class="on">Team</button>
       <button data-tab="closers">Closers</button>
       <button data-tab="setters">Setters</button>
+      <button data-tab="dm">DM setters</button>
       <button data-tab="calls">Calls</button>
     </div>
     <div class="spacer"></div>
@@ -235,6 +248,7 @@ td.wide{white-space:pre-wrap;font-size:12.5px;max-width:320px;font-variant-numer
       <label>Closer EOD<input type="text" id="closerUrl"></label>
       <label>Setter EOD<input type="text" id="setterUrl"></label>
       <label>Closer post-call form<input type="text" id="postUrl"></label>
+      <label>DM setter EOD<input type="text" id="dmUrl"></label>
     </div>
     <button class="btn" id="load">Load my data</button>
     <button class="btn ghost" id="reset">Back to snapshot</button>
@@ -279,6 +293,8 @@ Cal,2026-08-31,100,3,0,0,5,5,0,0,0,6,Not Educated enough,N/a
 Cal,2026-09-01,15,2,0,4,3,3,1,2000,8000,5,None,Was travelling so couldn’t really dial but back home and fully ready today 
 Cal,2026-09-02,80,7,3,3,1,1,1,9500,15500,7,Not Educated enough,"Jasmin hafid, tried to pitch os lite to her on call. Didn’t work but she’s open to getting on with Ali to discuss it which I think he could easily close her on, if she just has someone explain the logistics better "`;
 
+const SNAPSHOT_DM = `Setter Name,Date of EOD,Leads Contacted,Qualified Convos,Links Sent,Sets,Calls on calendar,Live calls,Closes,Down sells,Cash Collected,Total Revenue,Rate Today From 1-10,What objections are coming up that are preventing sets`;
+
 const SNAPSHOT_POST = `Submission ID,Respondent ID,Submitted at,Closer,Lead Email (Must Match One In CRM),"Give a brief summary of the call (What they were hoping to get out of this, what was stopping them)And give the outcome (Example: Ended in a fear objection that I couldn't solve, etc)(Please be as detailed as possible)*",Did you make an offer?,What is the lead status?,Cash collected,Total Revenue ,Call Recording
 J1oVAk7,EkeZWM4,2026-08-28 20:42:27,Ali,aymanshoeib18@gmail.com,fsdfsdfsdfsd,TRUE,Closed,5000,5000,https://meet.google.com/home
 2jR4bDe,EkeZWM4,2026-09-02 21:26:49,Ali,aymanshoeib18@gmail.com,Ended in a close.,TRUE,Closed,5000,5000,https://meet.google.com/home
@@ -293,7 +309,8 @@ aOlB1XX,yPylX6d,2026-09-02 22:28:30,Ali,test12345@gmail.com,hdhjhdkdhkDJKASBDJAS
 const IDS = {
   closer: "1Ogbg8G8xndYDbcBwPEZzujsXgYGvDSjyJJtG89iWBAw",
   setter: "1gox2hhIPxUI6EKi9V1zx7GqWaYIpt9jXKCkCPNhEtL0",
-  post:   "15k_LyeAZ1vGtIF2sOnHk1zw_6ccCUg6ebkc8rMTgLnk"
+  post:   "15k_LyeAZ1vGtIF2sOnHk1zw_6ccCUg6ebkc8rMTgLnk",
+  dm:     "13thCmejbENyBkLA2M_hHvTk2nxfGBcSCQtUe-5a3vXc"
 };
 const gviz = id => "https://docs.google.com/spreadsheets/d/" + id + "/gviz/tq?tqx=out:csv";
 
@@ -387,6 +404,19 @@ const POST_MAP = {
   offer:["didyoumakeanoffer","offer"], status:["whatistheleadstatus","leadstatus","status"],
   cash:["cashcollected"], revenue:["totalrevenue"], rec:["callrecording","recording"]
 };
+const DM_MAP = {
+  name:["settername","name"], date:["dateofeod","date"],
+  leads:["leadscontacted","leads"], qualConvos:["qualifiedconvos","qualifiedconversations","qualified"],
+  links:["linkssent","links"], sets:["sets"], callsBooked:["callsoncalendar","calloncalendar"],
+  live:["livecalls","live"], closes:["closes","closed"], downsells:["downsells","downsell"],
+  cash:["cashcollected","cash"], revenue:["totalrevenue","revenue"],
+  rate:["ratetoday","ratetodayfrom110","rate"], objection:["whatobjections","objections","objection"]
+};
+const DM_NUM = new Set(["leads","qualConvos","links","sets","callsBooked","live","closes","downsells","cash","revenue","rate"]);
+const dmStats = r => ({entries:r.length, leads:sum(r,"leads"), qualConvos:sum(r,"qualConvos"), links:sum(r,"links"),
+  sets:sum(r,"sets"), callsBooked:sum(r,"callsBooked"), live:sum(r,"live"), closes:sum(r,"closes"),
+  downsells:sum(r,"downsells"), cash:sum(r,"cash"), revenue:sum(r,"revenue"), rate:avgRate(r)});
+
 const NUMERIC = new Set(["callsBooked","showed","noShows","reschedules","qualified","offers","deposits","closed",
   "followups","cash","revenue","rate","dials","connections","qualConvos","sets","closedSets"]);
 
@@ -537,17 +567,111 @@ function funnel(steps){
   }).join("");
 }
 
+/* ================= forecast ================= */
+function forecast(rows){
+  const days = [...new Set(rows.map(r=>r._key).filter(Boolean))].sort();
+  if(!days.length) return null;
+  const cash = sum(rows,"cash"), revenue = sum(rows,"revenue"), closed = sum(rows,"closed");
+  const first = new Date(days[0]+"T00:00:00"), last = new Date(days[days.length-1]+"T00:00:00");
+  const span = Math.round((last-first)/86400000)+1;
+  const reportDays = days.length;
+  const activity = Math.min(1, reportDays/Math.max(span,1));   // how often the team actually reports
+  const perDay = cash/reportDays;                              // cash per day they work
+  const closesPerDay = closed/reportDays;
+
+  const now = new Date(), y = now.getFullYear(), m = now.getMonth();
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const dayOfMonth = now.getDate();
+  const calLeft = Math.max(0, daysInMonth - dayOfMonth);
+  const workLeft = calLeft*activity;
+
+  const monthRows = rows.filter(r=>r._date && r._date.getFullYear()===y && r._date.getMonth()===m);
+  const mtd = sum(monthRows,"cash");
+  const mtdCloses = sum(monthRows,"closed");
+
+  return {
+    perDay, closesPerDay, activity, reportDays, cash, revenue, closed,
+    perClose: closed ? cash/closed : 0,
+    mtd, mtdCloses, calLeft, workLeft, daysInMonth, dayOfMonth, y, m,
+    projMonth: mtd + perDay*workLeft,
+    projCloses: mtdCloses + closesPerDay*workLeft,
+    next30: perDay*30*activity,
+    monthRows
+  };
+}
+
+function projPoints(f){
+  const byDay = {};
+  f.monthRows.forEach(r=>{ if(r._key) byDay[r._key] = (byDay[r._key]||0) + (r.cash||0); });
+  const keys = Object.keys(byDay).sort();
+  const pts = [{label:"1", v:0}];
+  let run = 0;
+  keys.forEach(k=>{ run += byDay[k]; pts.push({label:String(+k.split("-")[2]), v:run}); });
+  const split = pts.length-1;
+  const lastDay = keys.length ? +keys[keys.length-1].split("-")[2] : f.dayOfMonth;
+  const steps = Math.min(6, Math.max(1, f.daysInMonth-lastDay));
+  for(let i=1;i<=steps;i++){
+    const day = Math.round(lastDay + (f.daysInMonth-lastDay)*i/steps);
+    pts.push({label:String(day), v: run + f.perDay*f.activity*(day-lastDay), proj:true});
+  }
+  return {pts, split};
+}
+
+function projChart(box, f, target){
+  const {pts, split} = projPoints(f);
+  if(pts.length < 2){ box.innerHTML = '<div class="empty">Not enough days to project yet.</div>'; return; }
+  const W = Math.max(320, box.clientWidth), H = 210, P = {l:58,r:16,t:16,b:28};
+  const max = niceMax(Math.max(1, ...pts.map(p=>p.v), target||0));
+  const X = i => P.l + i*(W-P.l-P.r)/(pts.length-1);
+  const Y = v => H-P.b-(v/max)*(H-P.t-P.b);
+  let g = "";
+  for(let i=0;i<=4;i++){
+    const v = max*i/4, y = Y(v);
+    g += `<line x1="${P.l}" y1="${y}" x2="${W-P.r}" y2="${y}" stroke="${CO.stroke}"/>`;
+    g += `<text x="${P.l-10}" y="${y+4}" fill="${CO.dim}" font-size="11" text-anchor="end">$${v/1000}k</text>`;
+  }
+  pts.forEach((p,i)=>{ if(i===0||i===split||i===pts.length-1)
+    g += `<text x="${X(i)}" y="${H-8}" fill="${CO.dim}" font-size="11" text-anchor="middle">${p.label}</text>`; });
+  if(target>0 && target<=max){
+    g += `<line x1="${P.l}" y1="${Y(target)}" x2="${W-P.r}" y2="${Y(target)}" stroke="${CO.amber}"
+           stroke-width="1.5" stroke-dasharray="5 5" opacity=".8"/>`;
+    g += `<text x="${W-P.r}" y="${Y(target)-7}" fill="${CO.amber}" font-size="11" text-anchor="end">Target ${money(target)}</text>`;
+  }
+  const solid = pts.slice(0,split+1).map((p,i)=>X(i)+","+Y(p.v)).join(" ");
+  const dash  = pts.slice(split).map((p,i)=>X(i+split)+","+Y(p.v)).join(" ");
+  let s = `<polygon points="${P.l},${H-P.b} ${solid} ${X(split)},${H-P.b}" fill="${CO.cyan}" opacity=".08"/>`;
+  s += `<polyline class="ln" points="${solid}" fill="none" stroke="${CO.cyan}" stroke-width="2.5"
+         stroke-linecap="round" stroke-linejoin="round"/>`;
+  s += `<polyline class="ln" points="${dash}" fill="none" stroke="${CO.cyan}" stroke-width="2.5"
+         stroke-dasharray="6 6" opacity=".55" stroke-linecap="round"/>`;
+  s += `<circle cx="${X(pts.length-1)}" cy="${Y(pts[pts.length-1].v)}" r="4.5" fill="${CO.cyan}" opacity=".75">
+          <title>Projected month end · ${money(pts[pts.length-1].v)}</title></circle>`;
+  box.innerHTML = `<svg width="${W}" height="${H}" style="max-width:100%;overflow:visible">${g}${s}</svg>
+    <div class="legend"><span><i style="background:${CO.cyan}"></i>Cash so far</span>
+    <span><i style="background:${CO.cyan};opacity:.5"></i>Projected at current pace</span></div>`;
+  if(REDUCE) return;
+  box.querySelectorAll(".ln").forEach(pl=>{
+    const L = pl.getTotalLength();
+    const keep = pl.getAttribute("stroke-dasharray");
+    pl.style.strokeDasharray = L; pl.style.strokeDashoffset = L;
+    pl.getBoundingClientRect();
+    pl.style.transition = "stroke-dashoffset 1.2s var(--ease)";
+    pl.style.strokeDashoffset = 0;
+    if(keep) setTimeout(()=>{ pl.style.strokeDasharray = keep; }, 1250);
+  });
+}
+
 /* ================= state ================= */
 const KEY = "locumos_state_v2";
 const S = {
-  closer:[], setter:[], post:[], tab:"team",
-  from:"", to:"", closerPick:"All", setterPick:"All", rangeTouched:false, live:false,
-  urls:{closer:gviz(IDS.closer), setter:gviz(IDS.setter), post:gviz(IDS.post)}
+  closer:[], setter:[], post:[], dm:[], tab:"team",
+  from:"", to:"", closerPick:"All", setterPick:"All", dmPick:"All", rangeTouched:false, live:false, goal:0,
+  urls:{closer:gviz(IDS.closer), setter:gviz(IDS.setter), post:gviz(IDS.post), dm:gviz(IDS.dm)}
 };
 function save(){
   try{ localStorage.setItem(KEY, JSON.stringify({
-    tab:S.tab, from:S.from, to:S.to, closerPick:S.closerPick, setterPick:S.setterPick,
-    rangeTouched:S.rangeTouched, urls:S.urls })); }catch(e){}
+    tab:S.tab, from:S.from, to:S.to, closerPick:S.closerPick, setterPick:S.setterPick, dmPick:S.dmPick,
+    rangeTouched:S.rangeTouched, goal:S.goal, urls:S.urls })); }catch(e){}
 }
 function restore(){
   try{
@@ -555,18 +679,21 @@ function restore(){
     if(s.tab) S.tab=s.tab;
     if(s.closerPick) S.closerPick=s.closerPick;
     if(s.setterPick) S.setterPick=s.setterPick;
+    if(s.dmPick) S.dmPick=s.dmPick;
     if(s.urls) S.urls=s.urls;
+    if(s.goal) S.goal=+s.goal||0;
     if(s.rangeTouched){ S.rangeTouched=true; S.from=s.from||""; S.to=s.to||""; }
   }catch(e){}
 }
 
-function applyData(c,s,p){
+function applyData(c,s,p,m){
   S.closer = shape(toObjects(c), CLOSER_MAP);
   S.setter = shape(toObjects(s), SETTER_MAP);
   S.post   = shape(toObjects(p), POST_MAP, POST_NUM)
                .sort((a,b)=> (b._date?b._date.getTime():0) - (a._date?a._date.getTime():0));
+  S.dm     = shape(toObjects(m||SNAPSHOT_DM), DM_MAP, DM_NUM);
   if(!S.rangeTouched){
-    const days=[...S.closer,...S.setter,...S.post].map(r=>r._key).filter(Boolean).sort();
+    const days=[...S.closer,...S.setter,...S.post,...S.dm].map(r=>r._key).filter(Boolean).sort();
     if(days.length){ S.from=days[0]; S.to=days[days.length-1]; }
   }
   document.getElementById("from").value=S.from;
@@ -583,20 +710,20 @@ async function fetchCsv(url){
   if(t.trim().startsWith("<")) throw new Error("Got a web page, not CSV. Turn on link sharing for the sheets.");
   return t;
 }
-const LABEL = {closer:"Closer EOD", setter:"Setter EOD", post:"Post-call form"};
+const LABEL = {closer:"Closer EOD", setter:"Setter EOD", post:"Post-call form", dm:"DM setter EOD"};
 async function loadLive(){
   setStatus("Loading…");
-  const jobs = [["closer",S.urls.closer],["setter",S.urls.setter],["post",S.urls.post]];
+  const jobs = [["closer",S.urls.closer],["setter",S.urls.setter],["post",S.urls.post],["dm",S.urls.dm]];
   const res = await Promise.allSettled(jobs.map(j => fetchCsv(j[1])));
-  const out = {closer:SNAPSHOT_CLOSER, setter:SNAPSHOT_SETTER, post:SNAPSHOT_POST};
+  const out = {closer:SNAPSHOT_CLOSER, setter:SNAPSHOT_SETTER, post:SNAPSHOT_POST, dm:SNAPSHOT_DM};
   const bad = [];
   res.forEach((r,i) => {
     if(r.status === "fulfilled") out[jobs[i][0]] = r.value;
     else bad.push(LABEL[jobs[i][0]]);
   });
-  applyData(out.closer, out.setter, out.post);
+  applyData(out.closer, out.setter, out.post, out.dm);
   const t = new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
-  if(bad.length === 3){
+  if(bad.length === jobs.length){
     S.live = false;
     setStatus("Can't reach any sheet — each one needs link sharing on. Showing the snapshot.", "err");
   } else if(bad.length){
@@ -648,13 +775,50 @@ function callRow(r){
     </div></div>`;
 }
 
+function forecastCard(rows, delay, withGoal){
+  const f = forecast(rows);
+  if(!f) return "";
+  const monthName = new Date(f.y, f.m, 1).toLocaleDateString([], {month:"long"});
+  const tiles = `<div class="tiles c4">` + [
+    stat("Cash per day worked","",{n:f.perDay, fmt:"money", tone:CO.cyan}),
+    stat("Days reported in range","",{n:f.reportDays}),
+    stat("Cash so far in "+monthName,"",{n:f.mtd, fmt:"money"}),
+    stat("Days left in "+monthName,"",{n:f.calLeft}),
+    stat("Projected "+monthName+" close","",{n:f.projMonth, fmt:"money", accent:true}),
+    stat("Expected next 30 days","",{n:f.next30, fmt:"money"}),
+    stat("Projected closes by month end","",{n:f.projCloses, fmt:"num"}),
+    stat("Avg cash per close", f.perClose?money(f.perClose):"—", {n:f.perClose||null, fmt:"money"})
+  ].join("") + `</div>`;
+
+  let goal = "";
+  if(withGoal){
+    const g = S.goal||0;
+    const paceNow = g * (f.dayOfMonth/f.daysInMonth);
+    const delta = f.mtd - paceNow;
+    const done = g ? Math.min(100, (f.mtd/g)*100) : 0;
+    goal = `<div class="goal">
+      <label>Monthly cash target <input class="goalin tnum" id="goal" type="number" min="0" step="1000"
+        placeholder="e.g. 60000" value="${g||""}"></label>
+      <div class="goalbar"><div class="goalfill" data-w="${done}"></div></div>
+      ${g ? `<span class="verdict ${delta>=0?"ahead":"behind"}">${
+        delta>=0 ? money(delta)+" ahead of pace" : money(Math.abs(delta))+" behind pace"
+      }</span><span class="note">${money(f.mtd)} of ${money(g)} · projected ${money(f.projMonth)}</span>`
+      : `<span class="note">Set a target to track pace against it</span>`}
+    </div>`;
+  }
+
+  return card("Pace and forecast",
+    "At " + money(f.perDay) + " a day across " + f.reportDays + " reported days",
+    tiles + `<div style="margin-top:18px" id="chF"></div>` + goal, false, delay);
+}
+
 function render(){
   const cIn=S.closer.filter(inRange), sIn=S.setter.filter(inRange), pIn=S.post.filter(inRange);
   const view=document.getElementById("view"); const after=[];
   let d=0; const D=()=> (d+=60);
 
   if(S.tab==="team"){
-    const cs=closerStats(cIn), ss=setterStats(sIn);
+    const cs=closerStats(cIn), ss=setterStats(sIn), ds=dmStats(S.dm.filter(inRange));
     const board=namesOf(S.closer).map(n=>({name:n,...closerStats(cIn.filter(r=>r.name===n))}))
       .filter(r=>r.cash||r.closed||r.showed).sort((a,b)=>b.cash-a.cash);
     const sboard=namesOf(S.setter).map(n=>({name:n,...setterStats(sIn.filter(r=>r.name===n))}))
@@ -670,15 +834,16 @@ function render(){
           <div class="mini-row">
             <div class="mini"><div class="lbl">Closes</div><div class="val tnum" data-n="${cs.closed}" data-fmt="num">0</div></div>
             <div class="mini"><div class="lbl">Calls taken</div><div class="val tnum" data-n="${cs.showed}" data-fmt="num">0</div></div>
-            <div class="mini"><div class="lbl">Sets booked</div><div class="val tnum" data-n="${ss.sets}" data-fmt="num">0</div></div>
+            <div class="mini"><div class="lbl">Sets booked</div><div class="val tnum" data-n="${ss.sets+ds.sets}" data-fmt="num">0</div></div>
           </div>
         </div>
         <div class="hero-r"><div id="ch1"></div></div>
       </section>` +
       (latest ? card("Most recent call", ago(latest._date), `<div class="calls" style="margin:-16px -19px -19px">${callRow(latest)}</div>`, false, D()) : "") +
+      forecastCard(cIn, D(), true) +
       card("Pipeline, first dial to signed","Setter activity feeding closer results", funnel([
         {label:"Dials",value:ss.dials},{label:"Connections",value:ss.connections},
-        {label:"Qualified convos",value:ss.qualConvos},{label:"Sets booked",value:ss.sets},
+        {label:"Qualified convos",value:ss.qualConvos},{label:"Sets booked",value:ss.sets+ds.sets},
         {label:"Calls on calendar",value:cs.callsBooked},{label:"Calls showed",value:cs.showed},
         {label:"Offers made",value:cs.offers},{label:"Closed",value:cs.closed}
       ]), false, D()) +
@@ -711,6 +876,7 @@ function render(){
        counted twice. The post-call form feeds the calls feed and outcome mix.</p>`;
 
     after.push(()=>lineChart(document.getElementById("ch1"), timeline(cIn)));
+    after.push(()=>{ const b=document.getElementById("chF"); const f=forecast(cIn); if(b&&f) projChart(b,f,S.goal); });
     after.push(()=>donut(document.getElementById("ch2"), objections([...cIn,...sIn])));
     after.push(()=>donut(document.getElementById("ch3"), statusCounts(pIn)));
   }
@@ -736,6 +902,7 @@ function render(){
           stat("Revenue contracted","",{n:c1.revenue, fmt:"money"}),
           stat("Avg day rating","—",{n:c1.rate, fmt:"rating", accent:true})
         ].join("")+`</div>`, false, D()) +
+      forecastCard(sel, D(), false) +
       card("Conversion and cash efficiency","", `<div class="tiles c4">`+[
         stat("Show rate", pct(c1.showed,c1.callsBooked), {n:pctN(c1.showed,c1.callsBooked), fmt:"pct"}),
         stat("Offer rate", pct(c1.offers,c1.showed), {n:pctN(c1.offers,c1.showed), fmt:"pct"}),
@@ -761,6 +928,7 @@ function render(){
       ]), true, D());
     after.push(()=>lineChart(document.getElementById("ch1"), timeline(sel)));
     after.push(()=>donut(document.getElementById("ch2"), objections(sel)));
+    after.push(()=>{ const b=document.getElementById("chF"); const f=forecast(sel); if(b&&f) projChart(b,f,0); });
   }
 
   if(S.tab==="setters"){
@@ -800,6 +968,61 @@ function render(){
         {k:"qualConvos",h:"Qualified"},{k:"sets",h:"Sets"},{k:"showed",h:"Showed"},{k:"closedSets",h:"Closed"},
         {k:"cash",h:"Cash",f:r=>money(r.cash)},{k:"rate",h:"Rating"},
         {k:"objection",h:"Objection",wide:true},{k:"notes",h:"Notes",wide:true}
+      ]), true, D());
+    after.push(()=>lineChart(document.getElementById("ch1"), timeline(sel)));
+    after.push(()=>donut(document.getElementById("ch2"), objections(sel)));
+  }
+
+  if(S.tab==="dm"){
+    const dmIn = S.dm.filter(inRange);
+    const sel = S.dmPick==="All" ? dmIn : dmIn.filter(r=>r.name===S.dmPick);
+    const d1 = dmStats(sel);
+    const board = namesOf(S.dm).map(n=>({name:n, ...dmStats(dmIn.filter(r=>r.name===n))}))
+      .filter(r=>r.sets||r.leads).sort((a,b)=>b.sets-a.sets);
+    view.innerHTML =
+      repBar("DM setter", namesOf(S.dm), S.dmPick, "dm") +
+      (S.dm.length ? "" : card("", "", `<div class="empty">No DM setter EODs submitted yet.<br>
+        <span style="font-size:12.5px">This tab fills in the moment the first one lands in
+        <strong>Locum OS - DM Setter EOD</strong>.</span></div>`, false, 0)) +
+      card((S.dmPick==="All"?"All DM setters":S.dmPick)+" — activity", d1.entries+" end-of-day reports",
+        `<div class="tiles c5">`+[
+          stat("Leads contacted","",{n:d1.leads}),
+          stat("Qualified convos","",{n:d1.qualConvos}),
+          stat("Links sent","",{n:d1.links}),
+          stat("Sets booked","",{n:d1.sets}),
+          stat("Calls on calendar","",{n:d1.callsBooked}),
+          stat("Live calls","",{n:d1.live}),
+          stat("Closes","",{n:d1.closes}),
+          stat("Down sells","",{n:d1.downsells}),
+          stat("Cash collected","",{n:d1.cash, fmt:"money", tone:CO.cyan}),
+          stat("Avg day rating","—",{n:d1.rate, fmt:"rating", accent:true})
+        ].join("")+`</div>`, false, D()) +
+      card("Conversion and cash efficiency","", `<div class="tiles c4">`+[
+        stat("Lead to set", pct(d1.sets,d1.leads), {n:pctN(d1.sets,d1.leads), fmt:"pct"}),
+        stat("Qualified to set", pct(d1.sets,d1.qualConvos), {n:pctN(d1.sets,d1.qualConvos), fmt:"pct"}),
+        stat("Link to set", pct(d1.sets,d1.links), {n:pctN(d1.sets,d1.links), fmt:"pct"}),
+        stat("Set to close", pct(d1.closes,d1.sets), {n:pctN(d1.closes,d1.sets), fmt:"pct"}),
+        stat("Show rate", pct(d1.live,d1.callsBooked), {n:pctN(d1.live,d1.callsBooked), fmt:"pct"}),
+        stat("Cash per set", d1.sets?money2(d1.cash/d1.sets):"—", {n:d1.sets?d1.cash/d1.sets:null, fmt:"money2"}),
+        stat("Cash per close", d1.closes?money2(d1.cash/d1.closes):"—", {n:d1.closes?d1.cash/d1.closes:null, fmt:"money2"}),
+        stat("Cash collection rate", pct(d1.cash,d1.revenue), {n:pctN(d1.cash,d1.revenue), fmt:"pct"})
+      ].join("")+`</div>`, false, D()) +
+      card("DM funnel","Leads through to closes", funnel([
+        {label:"Leads contacted",value:d1.leads},{label:"Qualified convos",value:d1.qualConvos},
+        {label:"Links sent",value:d1.links},{label:"Sets booked",value:d1.sets},
+        {label:"Calls on calendar",value:d1.callsBooked},{label:"Live calls",value:d1.live},
+        {label:"Closes",value:d1.closes}
+      ]), false, D()) +
+      `<div class="two">
+        ${card("Cash and revenue by day","",'<div id="ch1"></div>', false, D())}
+        ${card("Objections preventing sets","",'<div id="ch2"></div>', false, D())}
+      </div>` +
+      card("Sets by DM setter","", bars(board,"sets",CO.violet,num), false, D()) +
+      card("Daily reports","", table([...sel].sort((a,b)=>a._key<b._key?1:-1), [
+        {k:"_key",h:"Date"},{k:"name",h:"Setter"},{k:"leads",h:"Leads"},{k:"qualConvos",h:"Qualified"},
+        {k:"links",h:"Links"},{k:"sets",h:"Sets"},{k:"live",h:"Live"},{k:"closes",h:"Closes"},
+        {k:"downsells",h:"Down sells"},{k:"cash",h:"Cash",f:r=>money(r.cash)},{k:"rate",h:"Rating"},
+        {k:"objection",h:"Objection",wide:true}
       ]), true, D());
     after.push(()=>lineChart(document.getElementById("ch1"), timeline(sel)));
     after.push(()=>donut(document.getElementById("ch2"), objections(sel)));
@@ -875,12 +1098,16 @@ document.getElementById("view").addEventListener("click", e=>{
   const b = e.target.closest("button"); if(!b) return;
   if(b.dataset.closer!==undefined){ S.closerPick=b.dataset.closer; save(); render(); }
   if(b.dataset.setter!==undefined){ S.setterPick=b.dataset.setter; save(); render(); }
+  if(b.dataset.dm!==undefined){ S.dmPick=b.dataset.dm; save(); render(); }
+});
+document.getElementById("view").addEventListener("change", e=>{
+  if(e.target.id === "goal"){ S.goal = Math.max(0, +e.target.value||0); save(); render(); }
 });
 document.getElementById("from").addEventListener("change", e=>{ S.from=e.target.value; S.rangeTouched=true; save(); render(); });
 document.getElementById("to").addEventListener("change", e=>{ S.to=e.target.value; S.rangeTouched=true; save(); render(); });
 document.getElementById("allTime").addEventListener("click", ()=>{
   S.rangeTouched=false;
-  const days=[...S.closer,...S.setter,...S.post].map(r=>r._key).filter(Boolean).sort();
+  const days=[...S.closer,...S.setter,...S.post,...S.dm].map(r=>r._key).filter(Boolean).sort();
   if(days.length){ S.from=days[0]; S.to=days[days.length-1]; }
   document.getElementById("from").value=S.from; document.getElementById("to").value=S.to;
   save(); render();
@@ -894,13 +1121,14 @@ document.getElementById("load").addEventListener("click", ()=>{
   S.urls = {
     closer: document.getElementById("closerUrl").value.trim(),
     setter: document.getElementById("setterUrl").value.trim(),
-    post:   document.getElementById("postUrl").value.trim()
+    post:   document.getElementById("postUrl").value.trim(),
+    dm:     document.getElementById("dmUrl").value.trim()
   };
   save(); loadLive();
 });
 document.getElementById("reset").addEventListener("click", ()=>{
   S.live = false;
-  applyData(SNAPSHOT_CLOSER, SNAPSHOT_SETTER, SNAPSHOT_POST);
+  applyData(SNAPSHOT_CLOSER, SNAPSHOT_SETTER, SNAPSHOT_POST, SNAPSHOT_DM);
   setStatus("Snapshot · 3 Sep, 10:45 AM"); render();
 });
 let rt; window.addEventListener("resize", ()=>{
@@ -921,8 +1149,10 @@ document.querySelectorAll(".seg button").forEach(b=>{
 document.getElementById("closerUrl").value = S.urls.closer;
 document.getElementById("setterUrl").value = S.urls.setter;
 document.getElementById("postUrl").value   = S.urls.post;
-applyData(SNAPSHOT_CLOSER, SNAPSHOT_SETTER, SNAPSHOT_POST);
+ document.getElementById("dmUrl").value     = S.urls.dm || gviz(IDS.dm);
+applyData(SNAPSHOT_CLOSER, SNAPSHOT_SETTER, SNAPSHOT_POST, SNAPSHOT_DM);
 render();
+loadLive();                       // always pull fresh on open
 requestAnimationFrame(moveInd);
 setTimeout(moveInd, 300);
 setInterval(()=>{ if(S.live) loadLive(); }, 300000);
