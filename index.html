@@ -188,6 +188,25 @@ td.wide{white-space:pre-wrap;font-size:12.5px;max-width:320px;font-variant-numer
 .sg input{width:100%;margin-top:5px;background:rgba(0,0,0,.28);border:1px solid var(--stroke);border-radius:9px;
   padding:8px 11px;color:var(--text);font:inherit;font-size:12.5px}
 
+/* hero, two headline figures */
+.heroCard{padding:22px 22px 8px}
+.heroTop{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.figure .big{margin-top:2px}
+.figure.right{text-align:right;border-left:1px solid var(--stroke);padding-left:22px}
+.big.gold{background:linear-gradient(96deg,var(--amber),#FFD98C);-webkit-background-clip:text;
+  background-clip:text;color:transparent}
+.sub2{margin-top:8px;font-size:13px}
+.collbar{height:13px;border-radius:999px;background:rgba(242,180,65,.22);overflow:hidden;margin-top:22px;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.25)}
+.collfill{height:100%;width:0;border-radius:999px;transition:width 1.15s var(--ease);
+  background:linear-gradient(90deg,rgba(45,212,206,.55),var(--cyan))}
+.collkey{display:flex;justify-content:space-between;gap:12px;margin-top:9px;font-size:12.5px;color:var(--muted)}
+.collkey i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:7px;vertical-align:middle}
+@media (max-width:700px){
+  .heroTop{grid-template-columns:1fr}
+  .figure.right{text-align:left;border-left:none;padding-left:0;border-top:1px solid var(--stroke);padding-top:18px}
+}
+
 /* forecast */
 .goal{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:18px;
   padding-top:16px;border-top:1px solid var(--stroke)}
@@ -826,18 +845,32 @@ function render(){
     const latest=pIn[0];
 
     view.innerHTML =
-      `<section class="card hero in">
-        <div class="hero-l">
-          <div class="lbl">Cash collected</div>
-          <div class="big tnum" data-n="${cs.cash}" data-fmt="money">0</div>
-          <div class="lbl" style="margin-top:8px">of ${money(cs.revenue)} contracted · ${pct(cs.cash,cs.revenue)} collected</div>
-          <div class="mini-row">
-            <div class="mini"><div class="lbl">Closes</div><div class="val tnum" data-n="${cs.closed}" data-fmt="num">0</div></div>
-            <div class="mini"><div class="lbl">Calls taken</div><div class="val tnum" data-n="${cs.showed}" data-fmt="num">0</div></div>
-            <div class="mini"><div class="lbl">Sets booked</div><div class="val tnum" data-n="${ss.sets+ds.sets}" data-fmt="num">0</div></div>
+      `<section class="card heroCard in">
+        <div class="heroTop">
+          <div class="figure">
+            <div class="lbl">Cash collected</div>
+            <div class="big tnum" data-n="${cs.cash}" data-fmt="money">0</div>
+            <div class="lbl sub2">${pct(cs.cash,cs.revenue)} of everything signed, actually banked</div>
+          </div>
+          <div class="figure right">
+            <div class="lbl">Revenue contracted</div>
+            <div class="big gold tnum" data-n="${cs.revenue}" data-fmt="money">0</div>
+            <div class="lbl sub2"><span style="color:var(--amber);font-weight:600">${money(cs.revenue-cs.cash)}</span> still to collect</div>
           </div>
         </div>
-        <div class="hero-r"><div id="ch1"></div></div>
+        <div class="collbar"><div class="collfill" data-w="${cs.revenue?Math.min(100,(cs.cash/cs.revenue)*100):0}"></div></div>
+        <div class="collkey">
+          <span><i style="background:${CO.cyan}"></i>Collected ${money(cs.cash)}</span>
+          <span><i style="background:rgba(242,180,65,.55)"></i>Outstanding ${money(cs.revenue-cs.cash)}</span>
+        </div>
+        <div class="mini-row">
+          <div class="mini"><div class="lbl">Closes</div><div class="val tnum" data-n="${cs.closed}" data-fmt="num">0</div></div>
+          <div class="mini"><div class="lbl">Calls taken</div><div class="val tnum" data-n="${cs.showed}" data-fmt="num">0</div></div>
+          <div class="mini"><div class="lbl">Sets booked</div><div class="val tnum" data-n="${ss.sets+ds.sets}" data-fmt="num">0</div></div>
+          <div class="mini"><div class="lbl">Avg deal size</div><div class="val tnum" data-n="${cs.closed?cs.revenue/cs.closed:0}" data-fmt="money">0</div></div>
+          <div class="mini"><div class="lbl">Avg collected per deal</div><div class="val tnum" data-n="${cs.closed?cs.cash/cs.closed:0}" data-fmt="money">0</div></div>
+        </div>
+        <div id="ch1" style="margin-top:14px"></div>
       </section>` +
       (latest ? card("Most recent call", ago(latest._date), `<div class="calls" style="margin:-16px -19px -19px">${callRow(latest)}</div>`, false, D()) : "") +
       forecastCard(cIn, D(), true) +
