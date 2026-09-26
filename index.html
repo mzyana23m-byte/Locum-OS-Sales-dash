@@ -207,6 +207,9 @@ td.wide{white-space:pre-wrap;font-size:12.5px;max-width:320px;font-variant-numer
   .figure.right{text-align:left;border-left:none;padding-left:0;border-top:1px solid var(--stroke);padding-top:18px}
 }
 
+.col{transform-origin:center bottom;animation:grow .75s var(--ease) both}
+@keyframes grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+
 /* forecast */
 .goal{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:18px;
   padding-top:16px;border-top:1px solid var(--stroke)}
@@ -248,6 +251,7 @@ td.wide{white-space:pre-wrap;font-size:12.5px;max-width:320px;font-variant-numer
       <button data-tab="setters">Setters</button>
       <button data-tab="dm">DM setters</button>
       <button data-tab="calls">Calls</button>
+      <button data-tab="webinar">Webinar</button>
     </div>
     <div class="spacer"></div>
     <span class="chip">From <input type="date" id="from"></span>
@@ -255,7 +259,7 @@ td.wide{white-space:pre-wrap;font-size:12.5px;max-width:320px;font-variant-numer
     <button class="btn ghost" id="allTime">All dates</button>
     <button class="btn" id="refresh">Refresh</button>
     <button class="btn ghost" id="toggleSetup">Sheets</button>
-    <span id="status">Snapshot · 3 Sep, 10:45 AM</span>
+    <span id="status">Snapshot · 26 Sep</span>
   </div>
 </div>
 
@@ -268,6 +272,7 @@ td.wide{white-space:pre-wrap;font-size:12.5px;max-width:320px;font-variant-numer
       <label>Setter EOD<input type="text" id="setterUrl"></label>
       <label>Closer post-call form<input type="text" id="postUrl"></label>
       <label>DM setter EOD<input type="text" id="dmUrl"></label>
+      <label>Webinar registrations<input type="text" id="webUrl"></label>
     </div>
     <button class="btn" id="load">Load my data</button>
     <button class="btn ghost" id="reset">Back to snapshot</button>
@@ -304,32 +309,372 @@ Maybe need to show them more value of the program, so they feel dumb saying no.
 
 "
 Ali,2026-09-01,3,2,0,1,2,2,0,2,1,2000,8000,7,None,"Nothing today, one who didn’t close is highly qualified used to paying $25k for masterclasses, said he’d be interested in VIP in a few months time, but said he’d be willing to pay for velocity tomorrow; said he didn’t have his card with him. "
-Ali,2026-09-02,2,1,0,1,1,1,0,1,0,9500,15500,8,None,.`;
+Ali,2026-09-02,2,1,0,1,1,1,0,1,0,9500,15500,8,None,.
+Ali,2026-09-03,2,1,0,1,1,1,0,1,0,2000,8000,6,Other,omar filled eod for ali
+Ali,2026-09-07,1,1,0,0,1,1,0,1,0,1000,1000,5,Parner/Parent,.
+Ali,2026-09-08,0,0,0,0,0,0,0,2,0,3000,9000,5,None,.
+Ali,2026-09-11,1,1,0,0,1,1,0,1,0,2000,2000,5,Other,.
+Ali,2026-09-15,1,1,0,0,1,1,0,1,0,2500,8000,7,None,.
+Ali,2026-09-16,1,1,0,0,1,1,0,1,0,2000,8000,7,Money,"Lead didn’t have money as he was between jobs, so cash was constrained. Downsold to Lite and said he’d like to upgrade once he starts working to Velocity. "
+Ali,2026-09-22,2,2,1,2,2,0,0,0,0,0,0,3,Other,Gagandeep was driving 
+Ali,2026-09-23,2,1,1,1,1,1,0,0,0,0,0,4,Money,Isma had just graduated and hasn’t even gotten her first paycheck from employer. 
+Ali,2026-09-24,2,1,1,0,1,1,0,0,0,0,0,4,None,"Extended the offer for the VIP package for JAMES, he did not have any objections, said he’s very interested, and said that he just had to take another call and would be interested in registering later for signing up later."`;
 
 const SNAPSHOT_SETTER = `Setter Name (Your Name),Date of EOD,Dials,Connections,Qualified Conversations,Sets,Calls on Calendar,Showed Calls,Closed Set,Cash Collected,Total Revenue,Rate Today,What Objections Are Coming Up That Are Preventing Sets,Notes From Today
-Cal,2026-08-31,50,6,6,7,0,1,1,7500,7500,7,Uncertainty,Alexis McCabe 
+Cal,2026-08-30,50,6,6,7,0,1,1,7500,7500,7,Uncertainty,Alexis McCabe 
 Cal,2026-08-31,100,3,0,0,5,5,0,0,0,6,Not Educated enough,N/a
-Cal,2026-09-01,15,2,0,4,3,3,1,2000,8000,5,None,Was travelling so couldn’t really dial but back home and fully ready today 
-Cal,2026-09-02,80,7,3,3,1,1,1,9500,15500,7,Not Educated enough,"Jasmin hafid, tried to pitch os lite to her on call. Didn’t work but she’s open to getting on with Ali to discuss it which I think he could easily close her on, if she just has someone explain the logistics better "`;
+Cal,2026-09-01,15,2,0,0,3,3,1,2000,8000,5,None,Was travelling so couldn’t really dial but back home and fully ready today 
+Cal,2026-09-02,80,7,3,3,1,1,1,9500,15500,7,Not Educated enough,"Jasmin hafid, tried to pitch os lite to her on call. Didn’t work but she’s open to getting on with Ali to discuss it which I think he could easily close her on, if she just has someone explain the logistics better "
+Cal,2026-09-03,60,6,2,3,1,1,1,2000,8000,7,Timing Issues,Didn’t get much luck with pick ups but really confident in at least 2/3 tomorrow closing. Gonna get in 100 dials minimum tomorrow and at least 3 more sets on the board as have lots of time
+Cal,2026-09-04,72,6,1,1,2,2,0,0,0,4,Timing Issues,Need to drill the terminology and knowledge about ins and outs of industry tomorrow to be able to have deeper convos and then build urgency 
+Cal,2026-09-07,79,7,2,2,1,0,1,1000,1000,5,Money,"Pick up date was diabolical, but think it was due to holiday. "
+Cal,2026-09-08,72,6,1,1,0,0,1,3000,8000,7,Timing Issues,"Feeling a lot more confident since learning more terminology, pick up rate still not good and if people picked up a lot were in work and couldn’t speak. Downsell should be incoming later. Think we can have a lot of luck with downselling lite for 50% off to anyone unqualified/ with lower intent"
+Cal,2026-09-02,80,7,1,1,2,1,0,0,0,4,Timing Issues,"A few people saying they weren’t ready to start just yet, feel like I need to lock down a way of pitching the program in a way that it’s beneficial for them to join now so they’re full reasy and have a head start for when they’re ready to start locums"
+Cal,2026-09-14,60,4,1,1,0,0,0,0,0,4,None,"Slow day today, had a match so was gone for most of the day and team meet as well, booking that’s on tomorrow is definitely closing though. Back tomorrow fully and gonna get 10 bookings by end of the week"
+Cal,2026-09-15,130,6,2,2,1,1,1,2000,8000,7,Timing Issues,Still not getting many pick ups but we still grinding it out. Want to get 8 more sets in by end of the week. Sent Killian a call to review and got good feedback on it. Also have one or two more that we’ll get through tomorrow.
+Cal,2026-09-11,0,0,0,0,0,0,0,2000,2000,5,None,filled by omar 
+Cal,2026-09-16,120,12,0,0,1,1,1,0,0,7,Timing Issues,"Pick up rate was a better today definitely, however basically everyone I spoke to was busy or in work. Didn’t have any qualified conversations apart from one with potential but was busy and asked me to call him back tomorrow"
+Cal,2026-09-17,110,4,0,0,0,0,0,2000,8000,6,Timing Issues,"Pick up rate not great today but have a good feeling about new strategy Ali wants to implement about pretending to be him over sms, have already gotten more responses through that. Hopefully tomorrow when I wake up there’ll be more responses from leads and I can get a few of them set."
+Cal,2026-09-18,100,2,0,0,0,0,0,0,0,5,None,Most leads were over a year old. Texting approach as Ali has been getting a lot more engagement. Gonna focus more on newer leads and just de dial and text again 
+Cal,2026-09-21,130,3,2,2,0,0,0,0,0,7,None,"Tried new approach of texting first as Ali. Also hit up every webby lead, so hopefully can wake up to some good convos tomorrow that I can dial"
+Cal,2026-09-22,150,13,1,1,2,1,0,0,0,6,None,"Focusing on dialling webby leads to warm them up. Had good conversations and based off what I’ve heard so far we’re gonna have a lot of bookings. Gonna continue with this method up until webby. Also still need to get through to a few people who have filled out form but haven’t actually booked in, gonna keep on them until they’re booked"
+Cal,2026-09-23,130,10,3,0,1,0,0,0,0,5,None,"Had two people that would have been set but because of calendar issues couldn’t actually book them in on the phone until I figured out when Ali was available, so just waiting on them to reply and I’ll get them in. Also have two calls scheduled with two other applicants tomorrow so will get them set. Still been having good convos with webby registrants also so that’s a plus"
+Cal,2026-09-24,100,6,1,1,2,1,0,0,0,6,Logistics,Good convos with webby registrants. Need to get through to the people who have filled form but haven’t booked call 
+Cal,2026-09-25,100,6,1,1,1,1,0,0,0,6,Not Educated enough,"Finally got through to some of the people that filled in form and didn’t book call. One of them is very interested but wants to wait till after workshop to learn more first. One is still in fellowship and wants to watch workshop, gonna pitch up lite after workshop"`;
+
+const SNAPSHOT_WEB = `Create Date,Name,Email,Career Status,Specialty,Platform Source,Placement Source,Campaign Source,Ad Set Source,Ad Source
+9/20/2026,MARTA,babolmarta@gmail.com,Attending Physician.,Primary Care (FM / IM),fb,Facebook_Desktop_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Videos,Proven Video #1 | 09/27/26 | 30 Days Workshop
+9/20/2026,Lisa,drlisarandon88@gmail.com,Attending Physician.,Other Specialty,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks + CTA,IG ER Doc 12 Years + CTA | 09/27/26 | 30 Days Workshop
+9/20/2026,Vanessa,yaleaka@yahoo.com,Attending Physician.,Emergency Medicine,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Lyn,nylor@icloud.com,Attending Physician.,Primary Care (FM / IM),ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Chibuzo,chibuzo.n.opara@gmail.com,Resident / Fellow.,Emergency Medicine,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/20/2026,Tanya,tboldeno@gmail.com,Attending Physician.,Other Specialty,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Images,Hormozi 4x5 | 09/27/26 | 30 Days Workshop
+9/20/2026,Candace,cysmith111@gmail.com,Attending Physician.,Emergency Medicine,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Genta,gbaci95@hotmail.com,Attending Physician.,Primary Care (FM / IM),fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks,IG ER Doc 12 Years | 09/27/26 | 30 Days Workshop
+9/20/2026,Farah,info@emanmedicalsc.com,Attending Physician.,Primary Care (FM / IM),fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Mo,quentinmccall@gmail.com,Resident / Fellow.,Primary Care (FM / IM),fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Proven Video #1 | 09/27/26 | 30 Days Workshop
+9/20/2026,Badi,mbdabjan@gmail.com,Resident / Fellow.,Neurology,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,CHALA,chala.riddick@gmail.com,Attending Physician.,Neurology,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,Hormozi 4x5 | 09/27/26 | 30 Days Workshop
+9/20/2026,Onyeka Nwachukwu,onyeka_nwachukwu13@yahoo.com,Attending Physician.,Primary Care (FM / IM),ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Videos,New Video Intro #3 | 09/27/26 | 30 Days Workshop
+9/20/2026,Humza,syed.h.humza@gmail.com,Resident / Fellow.,Other Specialty,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Irene,irenelimr2@gmail.com,Attending Physician.,Other Specialty,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Leslie,leslieorico73@yahoo.con,NP or PA.,Primary Care (FM / IM),fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks + CTA,IG ER Doc 12 Years + CTA | 09/27/26 | 30 Days Workshop
+9/20/2026,Laurie,lbenton77@msn.com,NP or PA.,Cardiology,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks + CTA,IG Day 20 of 43 Off + CTA | 09/27/26 | 30 Days Workshop
+9/20/2026,Sarfaraz Ahmad,sarfaraz2412@gmail.com,Resident / Fellow.,Primary Care (FM / IM),ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Yeny,mdyenchavarria@gmail.com,Resident / Fellow.,Primary Care (FM / IM),ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks + CTA,IG Day 20 of 43 Off + CTA | 09/27/26 | 30 Days Workshop
+9/20/2026,Muhammad,ali_haroon89@hotmail.com,Attending Physician.,Intensivists/Critical Care,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Dil,dilpreet70@hotmail.com,Attending Physician.,Other Specialty,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Mazin,mazin_noor@yahoo.com,Attending Physician.,Other Specialty,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Alexus,mcgeealexisrn@gmail.com,NP or PA.,Primary Care (FM / IM),ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Manoj,manoj1mazumder@gmail.com,Resident / Fellow.,Emergency Medicine,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Raed,raedjabbar1972@gmail.com,Resident / Fellow.,Cardiology,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Nareeman Khan,nareemank1@gmail.com,Attending Physician.,Primary Care (FM / IM),ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Grace,nobena@aol.com,Attending Physician.,Primary Care (FM / IM),fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Ursula,ursulanawab@gmail.com,Attending Physician.,Other Specialty,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Rodney,pattabhi75@yahoo.com,Attending Physician.,Primary Care (FM / IM),fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Maria,polar.skied628@passmail.net,Attending Physician.,Other Specialty,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,New Video Intro #3 | 09/27/26 | 30 Days Workshop
+9/20/2026,Trish,phtrish9@gmail.com,NP or PA.,Other Specialty,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Daniel,dangreenberg7@gmail.com,Resident / Fellow.,Emergency Medicine,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Afia,afia.adugyamfi@gmail.com,Resident / Fellow.,Other Specialty,ig,Others,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Yasmin,yasmin.khashab@gmail.com,Attending Physician.,Anesthesiology,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Carolina,collazogonzalez@gmail.com,Attending Physician.,Other Specialty,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/20/2026,Alison,alisont.ho@gmail.com,Attending Physician.,Other Specialty,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks,IG 250K 5 Shifts | 09/27/26 | 30 Days Workshop
+9/20/2026,Jeremiah H Tyson,hardstylz1@gmail.com,Attending Physician.,Emergency Medicine,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/21/2026,Prem Chand,drprem2019@gmail.com,Attending Physician.,Other Specialty,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/21/2026,Enrique Martinez,martinezenrique2@aol.com,Resident / Fellow.,Emergency Medicine,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/21/2026,Charbel,younischarbel@gmail.com,Resident / Fellow.,Other Specialty,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/21/2026,Charbel,younischarbel@gmail.com,Resident / Fellow.,Other Specialty,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/21/2026,Maha,mahafakherddine@yahoo.com,Attending Physician.,Emergency Medicine,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/21/2026,Kevin,kgorourke@gmail.com,Attending Physician.,Emergency Medicine,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/21/2026,AAISHA,aaisha.sm@gmail.com,Attending Physician.,Other Specialty,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/21/2026,Rebecca,rebeccaapollon@gmail.com,Attending Physician.,Emergency Medicine,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,New Video Intro #3 | 09/27/26 | 30 Days Workshop
+9/21/2026,Leo,7rico7@gmail.com,Resident / Fellow.,Emergency Medicine,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/21/2026,JC Poveda,jpove001@gmail.com,Attending Physician.,Other Specialty,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/21/2026,Kristina,mia31174@yahoo.com,Attending Physician.,OB/GYN,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Proven Video #6 | 09/27/26 | 30 Days Workshop
+9/21/2026,Lori,drloricrihfield@gmail.com,Attending Physician.,Emergency Medicine,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Images,Hormozi 4x5 | 09/27/26 | 30 Days Workshop
+9/21/2026,Bisher,sultanbisher@gmail.com,Attending Physician.,Primary Care (FM / IM),ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,Hormozi 4x5 | 09/27/26 | 30 Days Workshop
+9/21/2026,Tom,thomas.csepe@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Punam,punamtime@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Mina,harumbdr@gmail.com,Attending Physician.,Cardiology,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/21/2026,Denise Krackenberger,healthynp@yahoo.com,NP or PA.,Cardiology,fb,Facebook_Desktop_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks + CTA,IG Day 20 of 43 Off + CTA | 09/27/26 | 30 Days Workshop
+9/21/2026,Fernando Cortes,fcortesemsmd@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Amanda,arammentorp@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Joseph,jsruggiero12@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,James,jamespo8@comcast.net,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Teresa Le,teresa.dt.le@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Toni,thelhoward@yahoo.com,Attending Physician.,Emergency Medicine,email,email marketing,WS Sep27 | E01 | 2026-09-21 | Will You Join Me,e01,
+9/21/2026,Michael,mctuckerdo@gmail.com,Resident / Fellow.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Chris,baltimore.chris.843@gmail.com,Resident / Fellow.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Kendal Ayers,kgherget@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Akash Patel,apate232@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Avery,averythorn@hotmail.con,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Brandon,ryvkinbk@yahoo.com,Attending Physician.,Surgeon,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Images,Hormozi 4x5 | 09/27/26 | 30 Days Workshop
+9/21/2026,Josie,simmons.josie@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,David Goldberg,dfg311@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Chontelle Degler,cjmmwu@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Robert,robertmodes@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Paul,paul.tripathi@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Rohan,janwadkarrohan@gmail.com,Attending Physician.,Emergency Medicine,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks,IG 8000 Two Shifts | 09/27/26 | 30 Days Workshop
+9/21/2026,Jennifer,jhickeymd@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Mike,mpenna819@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,EKMEL,ebermek@gmail.com,Attending Physician.,Emergency Medicine,email,email marketing,WS Sep27 | E01 | 2026-09-21 | Will You Join Me,e01,
+9/21/2026,Arman Virabov,armanvirabov@gmail.com,Resident / Fellow.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Michael,michaellouka3@gmail.com,Resident / Fellow.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Kevin,randolphkev@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Laura,laura.tudor@eccemergency.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Amaninder Toor,amaninder05@icloud.com,Attending Physician.,Primary Care (FM / IM),ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/21/2026,Michelle,michellenguyen850@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Grace,waruchu@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Angelica,mambortega@gmail.com,Resident / Fellow.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Fatima,fsultan0815@gmail.com,Attending Physician.,Primary Care (FM / IM),fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/21/2026,Natalie,nsciano@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Kush,patek5874@gmail.com,Resident / Fellow.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Roopa,apoor2001@hotmail.com,Attending Physician.,Emergency Medicine,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/21/2026,Benjamin,benkooiker111@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Timothy Ng,labtimng@gmail.com,Attending Physician.,Radiologists,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/21/2026,Keri,keriwenker@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Ricardo Ramirez,rramirez1147@gmail.com,Resident / Fellow.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Lauren,lauren.zhao@nuvancehealth.org,Resident / Fellow.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Mohamed,drmmfaisal@gmail.com,Attending Physician.,Other Specialty,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/21/2026,Yuliya,jpristupa8@yahoo.com,Attending Physician.,Primary Care (FM / IM),ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/21/2026,Carolina,carolinagreenmd@gmail.com,Resident / Fellow.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Patrick,patsinclairdo@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Ali,alichaud@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Rahul,rgrahul1234@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Valerie,val.hopper93@gmail.com,Attending Physician.,Primary Care (FM / IM),fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks + CTA,IG Day 20 of 43 Off + CTA | 09/27/26 | 30 Days Workshop
+9/21/2026,Sarah Vermillion,slewin87@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Dang,dan.nguy107@gmail.com,Resident / Fellow.,Emergency Medicine,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/21/2026,Mitchell Cross,crossmitchell@yahoo.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Mohamed Soliman,soliman.mk@gmail.com,Attending Physician.,Surgeon,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/21/2026,Matt,mperala061014@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Joshua,joshuamsalyers@icloud.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/21/2026,Hussain,hakbar.5110@gmail.com,Resident / Fellow.,Primary Care (FM / IM),fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/21/2026,Albert Matos,amg68_md@hotmail.com,Attending Physician.,Emergency Medicine,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks + CTA,IG Day 20 of 43 Off + CTA | 09/27/26 | 30 Days Workshop
+9/21/2026,Andrew,andrew@thelocumos.com,,,,,,,
+9/21/2026,Michael,mjmeddows@gmail.com,Attending Physician.,Anesthesiology,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/22/2026,Mohammad,mohammadnaiyerdo@gmail.com,Attending Physician.,Emergency Medicine,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,Hormozi 4x5 | 09/27/26 | 30 Days Workshop
+9/22/2026,Killian,killianward88@gmail.com,Resident / Fellow.,Radiologists,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/22/2026,Raya,rayaiqbal@yahoo.com,Resident / Fellow.,Other Specialty,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Videos,New Video Intro #3 | 09/27/26 | 30 Days Workshop
+9/22/2026,Avi,iradaa332@gmail.com,NP or PA.,Emergency Medicine,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/22/2026,Adam,adamclarkegray@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/22/2026,Sima Assefi,simaassefi@gmail.com,Attending Physician.,Primary Care (FM / IM),ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/22/2026,Emma,emmalittle12@gmail.com,Attending Physician.,Emergency Medicine,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/22/2026,Clayton,claytonoverton@aol.com,Attending Physician.,Emergency Medicine,email,email marketing,WS Sep27 | E01 | 2026-09-21 | Will You Join Me,e01,
+9/22/2026,Zee,mzshankhaan@gmail.com,Attending Physician.,Primary Care (FM / IM),ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/22/2026,Karin,karintrujillo@hotmail.com,Attending Physician.,Surgeon,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/22/2026,Mina,mfanous23@gmail.com,Attending Physician.,Other Specialty,email,email marketing,WS Sep27 | E02 | 2026-09-22 | Left On Read,e02,
+9/22/2026,James,vecuronium@yahoo.com,Attending Physician.,Emergency Medicine,email,email marketing,WS Sep27 | E02 | 2026-09-22 | Left On Read,e02,
+9/22/2026,Farah,farahkhanmdmba@gmail.com,Attending Physician.,Emergency Medicine,email,email marketing,WS Sep27 | E02 | 2026-09-22 | Left On Read,e02,
+9/22/2026,Akshai,achundru14@gmail.com,Resident / Fellow.,Emergency Medicine,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/22/2026,Andrew Jea,ajea0908@gmail.com,Attending Physician.,Surgeon,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks   CTA,IG ER Doc 12 Years   CTA | 09/27/26 | 30 Days Workshop
+9/22/2026,Nena,nenamlaguerta@gmail.com,Attending Physician.,Other Specialty,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/22/2026,Vandana,vrpatel82@yahoo.com,NP or PA.,Other Specialty,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/22/2026,Aliaa,aliaahassan562@gmail.com,Attending Physician.,Other Specialty,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/22/2026,Praise,praise.njokuaustin@gmail.com,Resident / Fellow.,Emergency Medicine,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Videos,New Video Intro #3 | 09/27/26 | 30 Days Workshop
+9/22/2026,Abdelhai Abdelqader,abdelqader86@yahoo.com,Attending Physician.,Other Specialty,email,email marketing,WS Sep27 | E02 | 2026-09-22 | Left On Read,e02,
+9/22/2026,Kaleem,kaleemdawood123@gmail.com,Attending Physician.,Other Specialty,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/22/2026,Laura,l.velezturizo@gmail.com,Resident / Fellow.,Emergency Medicine,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks + CTA,IG Day 20 of 43 Off + CTA | 09/27/26 | 30 Days Workshop
+9/22/2026,Mercedes,iriuateni@gmail.com,Attending Physician.,OB/GYN,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks + CTA,IG Day 20 of 43 Off + CTA | 09/27/26 | 30 Days Workshop
+9/22/2026,Emily,emilyfiore.md@gmail.com,Resident / Fellow.,Intensivists/Critical Care,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Aug 30th 26' - Leads,LLA 2-3% - Images,BMark Image #3 9x16 | 08/30/26 | 30 Days Workshop
+9/22/2026,Saran,shall15.sh@gmail.com,Attending Physician.,Other Specialty,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/22/2026,Saimanthra,manthraganesh0301@gmail.com,Attending Physician.,Emergency Medicine,ig,Others,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,Hormozi 4x5 | 09/27/26 | 30 Days Workshop
+9/22/2026,Shanda,drshanda93@gmail.com,Resident / Fellow.,Emergency Medicine,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/22/2026,Q,quentinmccall@gmail.com,Resident / Fellow.,Primary Care (FM / IM),fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/22/2026,Karilyn,kmedinanales@gmail.com,Attending Physician.,Other Specialty,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/22/2026,Mohamed,helmybasha33@gmail.com,Attending Physician.,Other Specialty,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/22/2026,Joey,e.joeygomez@gmail.com,Other.,Other Specialty,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/22/2026,Amani,amani.ahmed.md@gmail.com,Attending Physician.,Other Specialty,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/22/2026,Alexandra,alex.ewenczyk@gmail.com,,,,,,,
+9/22/2026,Ankit,ankit.kapadia@gmail.com,Attending Physician.,Anesthesiology,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/22/2026,Fatima Safi,fatimasafi786@gmail.com,Attending Physician.,Primary Care (FM / IM),ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks + CTA,IG 8000 Two Shifts + CTA | 09/27/26 | 30 Days Workshop
+9/22/2026,Wafa,wafa.mehboob@berkeley.edu,Resident / Fellow.,Primary Care (FM / IM),ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/22/2026,Bliss,uasfeen@gmail.com,Resident / Fellow.,Primary Care (FM / IM),fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/22/2026,Punaam,roshdiv@haoo.com,Attending Physician.,Primary Care (FM / IM),fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/23/2026,Meghana,meghanahalkar@gmail.com,Attending Physician.,Primary Care (FM / IM),ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/23/2026,Bruce Newman,brucelnewman@gmail.com,Attending Physician.,Other Specialty,fb,Facebook_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/23/2026,Sowmya,sivakumarsowmya11@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/23/2026,Sid,sidsbusy1@yahoo.com,Attending Physician.,Intensivists/Critical Care,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/23/2026,Daniel,lidedaniel@gmail.com,Resident / Fellow.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/23/2026,Elizabeth Bonsu,elizabeth.bonsu@gmail.com,Attending Physician.,Other Specialty,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/23/2026,Maria,mcmorenoe91@gmail.com,Attending Physician.,Neurology,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/23/2026,Chris,christopherrob@pcom.edu,Attending Physician.,Other Specialty,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Videos,New Video Intro #3 | 09/27/26 | 30 Days Workshop
+9/23/2026,Mike,mian.mike@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/23/2026,Sharon,swoozer@gmail.com,Resident / Fellow.,Other Specialty,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/23/2026,Abdulalim,aahusayni@gmail.com,Attending Physician.,Primary Care (FM / IM),ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/23/2026,Sabrina,sabrinablac@yahoo.com,NP or PA.,Other Specialty,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/23/2026,Irene,irenelimr2@gmail.com,Attending Physician.,Other Specialty,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/23/2026,Omar,omar.conce@gmail.com,Resident / Fellow.,Radiologists,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/23/2026,Kristie,kjski@yahoo.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/23/2026,Brian,bmaneevese@yahoo.com,Attending Physician.,Emergency Medicine,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/23/2026,Nargis,nargisjilan@gmail.com,Attending Physician.,Other Specialty,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/23/2026,Teresa,stardance655@yahoo.com,Attending Physician.,Primary Care (FM / IM),fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/23/2026,Kristen,kristen.howerton16@gmail.com,Attending Physician.,Primary Care (FM / IM),email,email marketing,"WS Sep27 | E03 | 2026-09-23 | $50,000 Mistake",e03,
+9/23/2026,Adeeb,adeebadam@gmail.com,Attending Physician.,Other Specialty,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/23/2026,J,jlmasel100@gmail.com,Attending Physician.,Other Specialty,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/23/2026,Rene Monzon,rene.monzon@icloud.com,Attending Physician.,Emergency Medicine,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks + CTA,IG 8000 Two Shifts + CTA | 09/27/26 | 30 Days Workshop
+9/23/2026,Ann,ankid1586@gmail.com,Attending Physician.,Primary Care (FM / IM),ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/23/2026,Wajiha,nwajiha79@yahoo.com,Attending Physician.,Other Specialty,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/23/2026,Sima,simakp@yahoo.com,Attending Physician.,Primary Care (FM / IM),ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/23/2026,L,lskazi06@gmail.com,Resident / Fellow.,Emergency Medicine,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/23/2026,Michael,soonerish@gmail.com,Attending Physician.,Radiologists,email,email marketing,WS Jul26 · E05 · Jul17 · Build4 $200k mistake,,
+9/23/2026,Francis,nextoosconaro@yahoo.com,Resident / Fellow.,Emergency Medicine,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/23/2026,Anil S,anilsavarapu@gmail.com,Attending Physician.,Primary Care (FM / IM),fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/23/2026,Erin,erinumbriaco@gmail.com,Attending Physician.,Intensivists/Critical Care,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/23/2026,Marcus,mja759@gmail.com,Attending Physician.,Surgeon,,,(wall-feed-fb-the-top-doc),,
+9/23/2026,David,dajerrard@yahoo.com,Attending Physician.,Emergency Medicine,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Proven Video #6 | 09/27/26 | 30 Days Workshop
+9/23/2026,Fernando Tejeda-Castro,tejedafernando66@gmail.com,Resident / Fellow.,Emergency Medicine,facebook,organic,workshop,personal_profile,
+9/23/2026,Ahmed,ahmed.sharaan87@gmail.com,Attending Physician.,Intensivists/Critical Care,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Proven Video #6 | 09/27/26 | 30 Days Workshop
+9/23/2026,Rami Fakih,fakihramy@gmail.com,Attending Physician.,Surgeon,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/23/2026,Funke Adebayo,fayo87@yahoo.com,Attending Physician.,Primary Care (FM / IM),email,email marketing,WS Sep27 | E02 | 2026-09-22 | Left On Read,e02,
+9/23/2026,Joshua,joshuashekhtman@mail.com,Resident / Fellow.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/23/2026,Nina,nina.ahuja@gmail.com,Attending Physician.,Other Specialty,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks + CTA,IG Day 20 of 43 Off + CTA | 09/27/26 | 30 Days Workshop
+9/23/2026,Julio,jmdepenamd@gmail.com,Attending Physician.,Emergency Medicine,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/23/2026,Imtiaz,imameras94@gmail.com,Resident / Fellow.,Anesthesiology,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Proven Video #6 | 09/27/26 | 30 Days Workshop
+9/23/2026,JUSTIN,justin.long1622@gmail.com,NP or PA.,Other Specialty,fb,Facebook_Desktop_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/23/2026,Kiran,kamathki@gmail.com,Attending Physician.,Anesthesiology,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/23/2026,Brittani,doctorbrittani247@gmail.clm,Resident / Fellow.,Primary Care (FM / IM),fb,Facebook_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/23/2026,Anthony,anthonymoon19@gmail.com,Attending Physician.,Emergency Medicine,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Bongani,bmthembuk@gmail.com,Attending Physician.,Emergency Medicine,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Sm,spencerlmay@gmail.com,Resident / Fellow.,Emergency Medicine,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Scott,swcaldwe2@gmail.com,Attending Physician.,OB/GYN,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Maggie,maggie.swift1212@gmail.com,Attending Physician.,Anesthesiology,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Heather,heather.tassone@me.com,Attending Physician.,Emergency Medicine,,,,,
+9/24/2026,Sara,sastringfellow@gmail.com,Attending Physician.,OB/GYN,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Nicole,kiesha.gray13@gmail.com,Attending Physician.,Neurology,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Ellen,eloeser59@gmail.com,Attending Physician.,Primary Care (FM / IM),fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Siva,a_sivasenthil@msn.com,Attending Physician.,Anesthesiology,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Victoria,victorianqueen2023@gmail.com,Attending Physician.,Other Specialty,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Asma,asmakanjwal@gmail.com,Attending Physician.,Cardiology,fb,Facebook_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Mary Anne,mary00anne@gmail.comm,Resident / Fellow.,Emergency Medicine,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Tamra,t410bee@yahoo.com,Attending Physician.,OB/GYN,email,email marketing,WS Sep27 | E04 | 2026-09-24 | Un-Present CV,e04,
+9/24/2026,Akit,akpatel0518@gmail.com,Attending Physician.,Other Specialty,email,email marketing,WS Sep27 | E04 | 2026-09-24 | Un-Present CV,e04,
+9/24/2026,Elad,elad613@gmail.com,Resident / Fellow.,Emergency Medicine,ig,Others,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,E,eewstewart@gmail.com,Attending Physician.,Surgeon,email,email marketing,WS Sep27 | E04 | 2026-09-24 | Un-Present CV,e04,
+9/24/2026,Dicarba,dicarbah@gmail.com,Resident / Fellow.,Primary Care (FM / IM),fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Maureen Masara,mkerubo2006@yahoo.com,Attending Physician.,Other Specialty,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Images,Hormozi 4x5 | 09/27/26 | 30 Days Workshop
+9/24/2026,Victoria,victoriaseligman@yahoo.com,Other.,Other Specialty,email,email marketing,WS Sep27 | E04 | 2026-09-24 | Un-Present CV,e04,
+9/24/2026,Aziz,aziz.saade@gmail.com,Resident / Fellow.,Other Specialty,email,email marketing,WS Sep27 | E04 | 2026-09-24 | Un-Present CV,e04,
+9/24/2026,Antoinette,34cohorts_toad@icloud.com,Attending Physician.,Primary Care (FM / IM),fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Gina,gy.robinson@gmail.com,Attending Physician.,Primary Care (FM / IM),email,email marketing,WS Sep27 | E04 | 2026-09-24 | Un-Present CV,e04,
+9/24/2026,Isha Rao,isharao016@gmail.com,Attending Physician.,Other Specialty,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/24/2026,Lisa,lisa.larsen777@gmail.com,Attending Physician.,Other Specialty,email,email marketing,WS Sep27 | E04 | 2026-09-24 | Un-Present CV,e04,
+9/24/2026,Tessa,tessa.antalan@gmail.com,Attending Physician.,Other Specialty,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Maggie,myechao@gmail.com,Attending Physician.,Emergency Medicine,,,,,
+9/24/2026,Jennifer,jennifer.nwaogu@evershinecare.com,NP or PA.,Primary Care (FM / IM),fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Ade,banke.adebayo@gmail.com,Attending Physician.,Emergency Medicine,email,email marketing,WS Sep27 | E04 | 2026-09-24 | Un-Present CV,e04,
+9/24/2026,Michael,michael.nguyen.em@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/24/2026,Matthew,argypace119@gmail.com,Resident / Fellow.,Emergency Medicine,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Teresa,teresa.m.raya@gmail.com,Attending Physician.,Emergency Medicine,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Images,Hormozi 4x5 | 09/27/26 | 30 Days Workshop
+9/24/2026,Merid,meridmoqattash@gmail.com,Resident / Fellow.,Other Specialty,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Francisca,francisca.nwokeeras@gmail.vom,Attending Physician.,Emergency Medicine,email,email marketing,WS Sep27 | E04 | 2026-09-24 | Un-Present CV,e04,
+9/24/2026,Mary,mkcjones96@gmail.com,Attending Physician.,Emergency Medicine,email,email marketing,WS Sep27 | E04 | 2026-09-24 | Un-Present CV,e04,
+9/24/2026,Parth Patel,om87pat@yahoo.com,Attending Physician.,Emergency Medicine,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks + CTA,IG Day 20 of 43 Off + CTA | 09/27/26 | 30 Days Workshop
+9/24/2026,Ram,gillramneek1@gmail.com,Attending Physician.,Primary Care (FM / IM),ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Linette,linsanganl@gmail.com,Attending Physician.,Other Specialty,email,email marketing,WS Sep27 | E04 | 2026-09-24 | Un-Present CV,e04,
+9/24/2026,Jay,jayfdiamond@gmail.com,Attending Physician.,Emergency Medicine,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Mona,mbnoroozi@gmail.com,Other.,Surgeon,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/24/2026,Sandra,nurseeni@icloud.com,Attending Physician.,Other Specialty,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Law,lawcounts1md@gmail.com,Attending Physician.,Primary Care (FM / IM),fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Lisa,lps@throwbacktheropellc.com,Attending Physician.,Primary Care (FM / IM),ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Images,Hormozi 4x5 | 09/27/26 | 30 Days Workshop
+9/24/2026,David,daveambrose77@hotmail.com,Attending Physician.,Cardiology,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Nancy,vbnmcb@gmail.com,Attending Physician.,Primary Care (FM / IM),ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Sanja,dr.mitkovska@gmail.com,Resident / Fellow.,Emergency Medicine,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Madhu,kaureffect@gmail.com,Attending Physician.,Anesthesiology,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/24/2026,Amy,amy071115@gmail.com,Attending Physician.,Primary Care (FM / IM),fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Rajvi Gor,rajvikansagara28@gmail.com,Resident / Fellow.,Hematology/Oncology,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Hebah Soudan,hebah.soudan@gmail.com,Resident / Fellow.,Emergency Medicine,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Tiffany Iheanacho,tking678@aol.com,Other.,Other Specialty,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,New Video Intro #3 | 09/27/26 | 30 Days Workshop
+9/24/2026,J.Q.,jquiros89@gmail.com,Resident / Fellow.,Intensivists/Critical Care,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,William,williamkurban@gmail.com,Attending Physician.,Hematology/Oncology,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks + CTA,IG Day 20 of 43 Off + CTA | 09/27/26 | 30 Days Workshop
+9/24/2026,Sergio,ssergioasanchez@gmail.com,Resident / Fellow.,Emergency Medicine,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Jeff,wuhantu@gmail.com,Attending Physician.,Emergency Medicine,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/24/2026,Maisha,maishablp@gmail.com,Attending Physician.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/24/2026,James,jt.tran.21@gmail.com,Attending Physician.,Other Specialty,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Videos,New Video Intro #3 | 09/27/26 | 30 Days Workshop
+9/25/2026,Marilyn,msrilyn5001@gmail.com,Attending Physician.,Other Specialty,fb,Facebook_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/25/2026,Christine,ctpn26@gmail.com,Attending Physician.,Primary Care (FM / IM),ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/25/2026,Julie,jumartinezall@gmail.com,Attending Physician.,Emergency Medicine,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/25/2026,Emmanuel,dr.quinones24@gmail.com,Other.,Other Specialty,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/25/2026,Jose,josemdeschamps@gmail.com,Attending Physician.,Emergency Medicine,,,,,
+9/25/2026,Christopher,chrisjwomackmd@gmail.com,Attending Physician.,Other Specialty,email,email marketing,WS Sep27 | E04 | 2026-09-24 | Un-Present CV,e04,
+9/25/2026,Erick,erick4711@yahoo.com,Resident / Fellow.,Emergency Medicine,fb-group,group-post,ws-sep27,doctors-20k,post-1
+9/25/2026,Sam,hudnoh99@gmail.com,Resident / Fellow.,Other Specialty,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks + CTA,IG Day 20 of 43 Off + CTA | 09/27/26 | 30 Days Workshop
+9/25/2026,Ali,aliershadi207@gmail.com,Attending Physician.,Intensivists/Critical Care,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/25/2026,Sindhu,drsindhuc@gmail.com,Resident / Fellow.,Hematology/Oncology,,,,,
+9/25/2026,Clement,jyclementh@gmail.com,Attending Physician.,Anesthesiology,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/25/2026,Sree,sreeja.natesan.md@gmail.com,Attending Physician.,Emergency Medicine,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks + CTA,IG Day 20 of 43 Off + CTA | 09/27/26 | 30 Days Workshop
+9/25/2026,Lisa,kkastruita55@gmail.com,Other.,Emergency Medicine,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/25/2026,Sarah,roba.alhasan@gmail.com,Attending Physician.,Hematology/Oncology,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,New Video Intro #3 | 09/27/26 | 30 Days Workshop
+9/25/2026,Rima,rbachuwa@outlook.com,Attending Physician.,OB/GYN,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Proven Video #6 | 09/27/26 | 30 Days Workshop
+9/25/2026,Regine,rboutin87@gmail.com,Attending Physician.,Other Specialty,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/25/2026,Brittany,mccordb03@gmail.com,Resident / Fellow.,Other Specialty,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Images,Hormozi 4x5 | 09/27/26 | 30 Days Workshop
+9/25/2026,Samantha,samstonermed@gmail.com,Resident / Fellow.,Emergency Medicine,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/25/2026,Vandana,vrpatel82@yahoo.com,NP or PA.,Primary Care (FM / IM),fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/25/2026,April M Butler,aprilbpharmd.amb@gmail.com,Other.,Other Specialty,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/25/2026,Katherine,katherine.camachof@gmail.com,Attending Physician.,Other Specialty,,,,,
+9/25/2026,Mousa,mousa525252@gmail.com,Attending Physician.,Primary Care (FM / IM),ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/25/2026,Jeff,suedood88@gmail.com,Attending Physician.,OB/GYN,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/25/2026,S,medinatu@gmail.com,Attending Physician.,Primary Care (FM / IM),ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/25/2026,Charles,charlessanky@gmail.com,Attending Physician.,Emergency Medicine,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/25/2026,Q,quentinmccall@gmail.com,NP or PA.,Intensivists/Critical Care,ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks,IG 8000 Two Shifts | 09/27/26 | 30 Days Workshop
+9/25/2026,Hani,hanikhuddus@gmail.com,Attending Physician.,Primary Care (FM / IM),ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/25/2026,Araba,arababm@yahoo.com,Attending Physician.,Cardiology,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Images,Hormozi 4x5 | 09/27/26 | 30 Days Workshop
+9/25/2026,Carlo,carolvsib@gmail.com,Resident / Fellow.,Anesthesiology,th,Threads_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/25/2026,Shazia,drshaziasiddiqi@gmail.com,Other.,Primary Care (FM / IM),ig,Instagram_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks,IG W2 vs Locum Freedom | 09/27/26 | 30 Days Workshop
+9/25/2026,V,consulting@vpglobalsolutions.com,Other.,Intensivists/Critical Care,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/26/2026,LaTashia,exceptionalcareelite@gmail.com,Attending Physician.,Emergency Medicine,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks + CTA,IG Day 20 of 43 Off + CTA | 09/27/26 | 30 Days Workshop
+9/26/2026,Lawrence,lawcounts1md@gmail.com,Attending Physician.,Primary Care (FM / IM),fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/26/2026,Justin Giordano,jgiordano99@gmail.com,Attending Physician.,Emergency Medicine,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Images,Hormozi 4x5 | 09/27/26 | 30 Days Workshop
+9/26/2026,Batoul Elamin,batoulamin@gmail.com,Attending Physician.,Other Specialty,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/26/2026,Pam,pamelagougler@hotmail.com,Attending Physician.,Primary Care (FM / IM),fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/26/2026,Zakiy,zakiybhatti51@gmail.com,,,,,,,
+9/26/2026,Carl,cgsceusa@gmail.com,,,,,,,
+9/26/2026,Erin,eohogan@gmail.com,Attending Physician.,Primary Care (FM / IM),ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/26/2026,Asma,asmakanjwal@gmail.com,Attending Physician.,Cardiology,fb,Facebook_Stories,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/26/2026,Elias,elibaiediddoc@gmail.com,Attending Physician.,Other Specialty,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Images,Hormozi 4x5 | 09/27/26 | 30 Days Workshop
+9/26/2026,Sara,sweetsara0806@gmail.com,Resident / Fellow.,Primary Care (FM / IM),ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,New Video Intro #3 | 09/27/26 | 30 Days Workshop
+9/26/2026,Ali,alicarameros@yahoo.com,Resident / Fellow.,OB/GYN,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/26/2026,,eyhamnemo@gmail.com,,,,,,,
+9/26/2026,Jesse Volturo,jcvolturo@gmail.com,Attending Physician.,Emergency Medicine,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/26/2026,Raja,lalitha.raja@gmail.com,Attending Physician.,Primary Care (FM / IM),fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/26/2026,Steven,sisloan@hotmail.com,Attending Physician.,Anesthesiology,email,email marketing,WS Sep27 | E04 | 2026-09-24 | Un-Present CV,e04,
+9/26/2026,Faith,fquenzer@gmail.com,Attending Physician.,Emergency Medicine,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/26/2026,N,neslihanyorukoglu78@gmail.com,NP or PA.,Hematology/Oncology,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/26/2026,Fahad,mdresatnott@gmail.com,Attending Physician.,Other Specialty,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/26/2026,Alex,ruxzen@gmail.com,Resident / Fellow.,Surgeon,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks + CTA,IG Day 20 of 43 Off + CTA | 09/27/26 | 30 Days Workshop
+9/26/2026,Galaxy,galaxy.j@gmail.com,Attending Physician.,Anesthesiology,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Images,BMark Image #3 9x16 | 09/27/26 | 30 Days Workshop
+9/26/2026,Aparna Batla,batlaaparna@gmail.com,Attending Physician.,Primary Care (FM / IM),fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/26/2026,Ahmad,asaleh78593@gmail.com,Resident / Fellow.,Emergency Medicine,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks + CTA,IG Day 20 of 43 Off + CTA | 09/27/26 | 30 Days Workshop
+9/26/2026,Fernanda,fernandapompeu84@gmail.com,Resident / Fellow.,Emergency Medicine,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/26/2026,Emily Travers,dremilytravers@gmail.com,Attending Physician.,OB/GYN,,,,,
+9/26/2026,S,sjpublic24@gmail.com,Attending Physician.,Surgeon,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/26/2026,Colleen,cw.lm@hotmail.com,Attending Physician.,Emergency Medicine,fb,Facebook_Instream_Video,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Proven Video #6 | 09/27/26 | 30 Days Workshop
+9/26/2026,Richa Varshney,richavarshney96@gmail.com,Attending Physician.,Other Specialty,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/26/2026,Kiyoshi,kiyoshinakamuramd@gmail.com,,,,,,,
+9/26/2026,Ayshah,ayshahq89@yahoo.com,Attending Physician.,Other Specialty,ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/26/2026,AMYO,aman8352@icloud.com,,,,,,,
+9/26/2026,Kunwardeep,kunwar47.kd@gmail.com,Attending Physician.,Intensivists/Critical Care,fb,Facebook_Mobile_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/26/2026,Ashok,ashepilly@gmail.com,Attending Physician.,Cardiology,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Open ADV+ - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/26/2026,Maya Alexis,amaya.anesth@yahoo.com,CRNA.,Anesthesiology,fb,Facebook_Mobile_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Doctors - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/26/2026,Geraldhine,geraldhine.07@hotmail.com,Resident / Fellow.,Primary Care (FM / IM),ig,Instagram_Reels,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,LLA 2-3% - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop
+9/26/2026,Jennifer,jenpennock27@gmail.com,Attending Physician.,Other Specialty,email,email marketing,WS Sep27 | E06 | 2026-09-26 | Guarantee,e06,
+9/26/2026,Liz,latinjazzgirl@yahoo.com,Attending Physician.,Other Specialty,ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - IG Hooks,IG Day 20 of 43 Off | 09/27/26 | 30 Days Workshop
+9/26/2026,Ans,ansarmghan@gmail.com,Attending Physician.,Neurology,email,email marketing,WS Sep27 | E04 | 2026-09-24 | Un-Present CV,e04,
+9/26/2026,Emily,emmichang@hotmail.com,Attending Physician.,OB/GYN,email,email marketing,WS Sep27 | E04 | 2026-09-24 | Un-Present CV,e04,
+9/26/2026,Divine,divinerules@hotmail.com,Resident / Fellow.,Primary Care (FM / IM),ig,Instagram_Feed,AFC - Locums In 30d Workshop - Sep 27th 26' - Leads,Warm - Videos,Norway Pill 9x16 | 09/27/26 | 30 Days Workshop`;
 
 const SNAPSHOT_DM = `Setter Name,Date of EOD,Leads Contacted,Qualified Convos,Links Sent,Sets,Calls on calendar,Live calls,Closes,Down sells,Cash Collected,Total Revenue,Rate Today From 1-10,What objections are coming up that are preventing sets`;
 
-const SNAPSHOT_POST = `Submission ID,Respondent ID,Submitted at,Closer,Lead Email (Must Match One In CRM),"Give a brief summary of the call (What they were hoping to get out of this, what was stopping them)And give the outcome (Example: Ended in a fear objection that I couldn't solve, etc)(Please be as detailed as possible)*",Did you make an offer?,What is the lead status?,Cash collected,Total Revenue ,Call Recording
-J1oVAk7,EkeZWM4,2026-08-28 20:42:27,Ali,aymanshoeib18@gmail.com,fsdfsdfsdfsd,TRUE,Closed,5000,5000,https://meet.google.com/home
-2jR4bDe,EkeZWM4,2026-09-02 21:26:49,Ali,aymanshoeib18@gmail.com,Ended in a close.,TRUE,Closed,5000,5000,https://meet.google.com/home
-Z9QdyP0,QKrPbLA,2026-09-02 22:10:21,Ali,test12345@gmail.com,jdgjdhjHDJbsjbSJqbdjbDJbdjbJKDbjkdDjkdl,TRUE,Deposit,1000,1000,"WWW.FATHOM.OC,"
-5XOd56d,QKrPbLA,2026-09-02 22:12:33,Ali,test12345@gmail.com,NDKNDKndkawnfkanfkbnfskfnsknfwknfkl,TRUE,In-House financing,0,2,3
-gbO5XpD,yPylX6d,2026-09-02 22:23:26,Ali,test12345@gmail.com,"dwjebdjbfsklgnol
-hsdihfksnf
-jfojdfw",TRUE,Follow Up ,0,0,www.ftahom.com
-aOlB1XX,yPylX6d,2026-09-02 22:28:30,Ali,test12345@gmail.com,hdhjhdkdhkDJKASBDJASBDJASBDJKA,TRUE,Follow Up ,0,0,0
-4aG20Xb,yPylX6d,2026-09-02 22:29:49,Ali,test12345@gmail.com,safasf,TRUE,Deposit,0,0,www.ftahom.com`;
+const SNAPSHOT_POST = `Submission ID,Respondent ID,Submitted at,Closer,Lead Email (Must Match One In CRM),"Give a brief summary of the call (What they were hoping to get out of this, what was stopping them)And give the outcome (Example: Ended in a fear objection that I couldn't solve, etc)(Please be as detailed as possible)*",Did you make an offer?,What is the lead status?,Cash collected,Total Revenue ,Call Recording,Was this a webinar Lead?
+2jR12zL,D4oNY7b,2026-09-03 23:49:06,Ali,nhafezi3@yahoo.com,Closed 2k x 4,TRUE,Closed,2000,8000,www.zoom.com,
+6DVpP2N,QKrPbLA,2026-09-04 5:57:41,Ali,drmrm1988@gmail.com,closed 7500 pif,TRUE,Closed,7500,7500,www.zoom.com,
+Ar0yRey,Mel9dAE,2026-09-16 10:51:34,Ali,neilmaithel@gmail.com,"He was ready to go. This is his first year out of residency. He’s only a few months out has been following me for a few years and knows that Locums is the right way to do it as a one-year contract with his W-2. When I asked him if he’s ready to invest, said he needs to think about it. I asked him what he needed to think about and honestly, it was just hesitation at that point of making the next step. I basically reassured him telling the program is guaranteed worst case scenario, he walks away with $500 and knowledge on how to do Locums best case scenario he lives his dream life. And a little bit of reframing in terms of investing in oneself and the sooner he starts, Locums, the sooner he can start building his dream life.",TRUE,Closed,2000,8000,On zoom ,`;
 
 const IDS = {
   closer: "1Ogbg8G8xndYDbcBwPEZzujsXgYGvDSjyJJtG89iWBAw",
   setter: "1gox2hhIPxUI6EKi9V1zx7GqWaYIpt9jXKCkCPNhEtL0",
   post:   "15k_LyeAZ1vGtIF2sOnHk1zw_6ccCUg6ebkc8rMTgLnk",
-  dm:     "13thCmejbENyBkLA2M_hHvTk2nxfGBcSCQtUe-5a3vXc"
+  dm:     "13thCmejbENyBkLA2M_hHvTk2nxfGBcSCQtUe-5a3vXc",
+  web:    "196__mDGISxlor5p0GLx4RitPSsmlM5s4BiMOPKfk7fQ"
 };
 const gviz = id => "https://docs.google.com/spreadsheets/d/" + id + "/gviz/tq?tqx=out:csv";
 
@@ -421,8 +766,48 @@ const POST_MAP = {
   id:["submissionid"], date:["submittedat","timestamp","date"], name:["closer"],
   lead:["leademail","email"], summary:["giveabriefsummary","summary"],
   offer:["didyoumakeanoffer","offer"], status:["whatistheleadstatus","leadstatus","status"],
-  cash:["cashcollected"], revenue:["totalrevenue"], rec:["callrecording","recording"]
+  cash:["cashcollected"], revenue:["totalrevenue"], rec:["callrecording","recording"],
+  webinar:["isthisawebinarlead","webinarlead","wasthisawebinarlead","webinar"],
+  source:["leadsource","wheredidthisleadcomefrom","source"]
 };
+// A lead counts as webinar if either the yes/no question or a lead-source question says so.
+function isWebinar(r){
+  const em = (r.lead||"").toLowerCase().trim();
+  if(em && S.regEmails && S.regEmails.has(em)) return true;   // matched a registrant
+  const s = norm(r.source||"");
+  if(s) return s.includes("webinar");
+  const w = norm(r.webinar||"");
+  return w==="yes" || w==="true" || w==="1" || w==="y";
+}
+const isNoShow = r => { const s = norm(r.status||""); return s.includes("noshow") || s.includes("didntshow"); };
+function callStats(rows){
+  const booked = rows.length, noShow = rows.filter(isNoShow).length;
+  const showed = booked - noShow;
+  const offers = rows.filter(r=>norm(r.offer)==="true").length;
+  const closes = rows.filter(r=>norm(r.status).includes("closed")).length;
+  const deposits = rows.filter(r=>norm(r.status).includes("deposit")).length;
+  return {booked, noShow, showed, offers, closes, deposits,
+          cash:sum(rows,"cash"), revenue:sum(rows,"revenue")};
+}
+const WEB_MAP = {
+  date:["createdate","date","timestamp"], name:["name"], email:["email"],
+  career:["careerstatus","career"], specialty:["specialty"],
+  platform:["platformsource","platform"], placement:["placementsource","placement"],
+  campaign:["campaignsource","campaign"], adset:["adsetsource","adset"], ad:["adsource","ad"]
+};
+const WEB_NUM = new Set([]);
+function tally(rows, field, limit){
+  const c = {};
+  rows.forEach(r => { const v=(r[field]||"").trim(); if(v) c[v]=(c[v]||0)+1; });
+  return Object.entries(c).map(([name,value])=>({name,value}))
+    .sort((a,b)=>b.value-a.value).slice(0, limit||8);
+}
+function perDay(rows){
+  const by = {};
+  rows.forEach(r=>{ if(r._key) by[r._key]=(by[r._key]||0)+1; });
+  return Object.keys(by).sort().map(k=>({label:shortDate(k), v:by[k]}));
+}
+
 const DM_MAP = {
   name:["settername","name"], date:["dateofeod","date"],
   leads:["leadscontacted","leads"], qualConvos:["qualifiedconvos","qualifiedconversations","qualified"],
@@ -680,12 +1065,31 @@ function projChart(box, f, target){
   });
 }
 
+function colChart(box, pts, color){
+  if(!pts.length){ box.innerHTML='<div class="empty">No registrations in this range.</div>'; return; }
+  const W=Math.max(320,box.clientWidth), H=200, P={l:42,r:12,t:14,b:26};
+  const max=niceMax(Math.max(1,...pts.map(p=>p.v))), bw=(W-P.l-P.r)/pts.length;
+  let s="";
+  for(let i=0;i<=3;i++){
+    const v=max*i/3, y=H-P.b-(v/max)*(H-P.t-P.b);
+    s+=`<line x1="${P.l}" y1="${y}" x2="${W-P.r}" y2="${y}" stroke="${CO.stroke}"/>`;
+    s+=`<text x="${P.l-8}" y="${y+4}" fill="${CO.dim}" font-size="11" text-anchor="end">${Math.round(v)}</text>`;
+  }
+  pts.forEach((p,i)=>{
+    const h=(p.v/max)*(H-P.t-P.b), x=P.l+i*bw+bw*0.16, w=Math.max(bw*0.68,2);
+    s+=`<rect class="col" x="${x}" y="${H-P.b-h}" width="${w}" height="${h}" rx="3" fill="${color}"
+         style="animation-delay:${i*45}ms"><title>${esc(p.label)} · ${p.v}</title></rect>`;
+    if(pts.length<=14) s+=`<text x="${x+w/2}" y="${H-8}" fill="${CO.dim}" font-size="10" text-anchor="middle">${esc(p.label)}</text>`;
+  });
+  box.innerHTML=`<svg width="${W}" height="${H}" style="max-width:100%">${s}</svg>`;
+}
+
 /* ================= state ================= */
 const KEY = "locumos_state_v2";
 const S = {
-  closer:[], setter:[], post:[], dm:[], tab:"team",
+  closer:[], setter:[], post:[], dm:[], web:[], regEmails:new Set(), tab:"team",
   from:"", to:"", closerPick:"All", setterPick:"All", dmPick:"All", rangeTouched:false, live:false, goal:0,
-  urls:{closer:gviz(IDS.closer), setter:gviz(IDS.setter), post:gviz(IDS.post), dm:gviz(IDS.dm)}
+  urls:{closer:gviz(IDS.closer), setter:gviz(IDS.setter), post:gviz(IDS.post), dm:gviz(IDS.dm), web:gviz(IDS.web)}
 };
 function save(){
   try{ localStorage.setItem(KEY, JSON.stringify({
@@ -705,14 +1109,16 @@ function restore(){
   }catch(e){}
 }
 
-function applyData(c,s,p,m){
+function applyData(c,s,p,m,wb){
   S.closer = shape(toObjects(c), CLOSER_MAP);
   S.setter = shape(toObjects(s), SETTER_MAP);
   S.post   = shape(toObjects(p), POST_MAP, POST_NUM)
                .sort((a,b)=> (b._date?b._date.getTime():0) - (a._date?a._date.getTime():0));
   S.dm     = shape(toObjects(m||SNAPSHOT_DM), DM_MAP, DM_NUM);
+  S.web    = shape(toObjects(wb||SNAPSHOT_WEB), WEB_MAP, WEB_NUM);
+  S.regEmails = new Set(S.web.map(r=>(r.email||"").toLowerCase().trim()).filter(Boolean));
   if(!S.rangeTouched){
-    const days=[...S.closer,...S.setter,...S.post,...S.dm].map(r=>r._key).filter(Boolean).sort();
+    const days=[...S.closer,...S.setter,...S.post,...S.dm,...S.web].map(r=>r._key).filter(Boolean).sort();
     if(days.length){ S.from=days[0]; S.to=days[days.length-1]; }
   }
   document.getElementById("from").value=S.from;
@@ -729,18 +1135,18 @@ async function fetchCsv(url){
   if(t.trim().startsWith("<")) throw new Error("Got a web page, not CSV. Turn on link sharing for the sheets.");
   return t;
 }
-const LABEL = {closer:"Closer EOD", setter:"Setter EOD", post:"Post-call form", dm:"DM setter EOD"};
+const LABEL = {closer:"Closer EOD", setter:"Setter EOD", post:"Post-call form", dm:"DM setter EOD", web:"Webinar registrations"};
 async function loadLive(){
   setStatus("Loading…");
-  const jobs = [["closer",S.urls.closer],["setter",S.urls.setter],["post",S.urls.post],["dm",S.urls.dm]];
+  const jobs = [["closer",S.urls.closer],["setter",S.urls.setter],["post",S.urls.post],["dm",S.urls.dm],["web",S.urls.web]];
   const res = await Promise.allSettled(jobs.map(j => fetchCsv(j[1])));
-  const out = {closer:SNAPSHOT_CLOSER, setter:SNAPSHOT_SETTER, post:SNAPSHOT_POST, dm:SNAPSHOT_DM};
+  const out = {closer:SNAPSHOT_CLOSER, setter:SNAPSHOT_SETTER, post:SNAPSHOT_POST, dm:SNAPSHOT_DM, web:SNAPSHOT_WEB};
   const bad = [];
   res.forEach((r,i) => {
     if(r.status === "fulfilled") out[jobs[i][0]] = r.value;
     else bad.push(LABEL[jobs[i][0]]);
   });
-  applyData(out.closer, out.setter, out.post, out.dm);
+  applyData(out.closer, out.setter, out.post, out.dm, out.web);
   const t = new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
   if(bad.length === jobs.length){
     S.live = false;
@@ -1087,6 +1493,96 @@ function render(){
     after.push(()=>donut(document.getElementById("ch3"), statusCounts(sel)));
   }
 
+  if(S.tab==="webinar"){
+    const web = pIn.filter(isWebinar), other = pIn.filter(r=>!isWebinar(r));
+    const w = callStats(web), o = callStats(other);
+    const tagged = S.post.some(r=>(r.webinar||"").trim() || (r.source||"").trim());
+
+    const cmpRow = (label, a, b, f) =>
+      `<tr><td style="white-space:nowrap;color:var(--muted)">${esc(label)}</td>
+        <td style="text-align:right;font-weight:600;color:${CO.cyan}">${f(a)}</td>
+        <td style="text-align:right">${f(b)}</td></tr>`;
+
+    const regs = S.web.filter(inRange);
+    const uniq = new Set(regs.map(r=>(r.email||"").toLowerCase())).size;
+    const dayPts = perDay(regs);
+    const peak = dayPts.length ? Math.max(...dayPts.map(p=>p.v)) : 0;
+
+    view.innerHTML =
+      card("Registrations", regs.length + " signups in this range", `<div class="tiles c5">`+[
+        stat("Registrations","",{n:regs.length, tone:CO.cyan}),
+        stat("Unique people","",{n:uniq}),
+        stat("Days registering","",{n:dayPts.length}),
+        stat("Average per day","",{n:dayPts.length? regs.length/dayPts.length : 0}),
+        stat("Best day","",{n:peak})
+      ].join("")+`</div><div style="margin-top:18px" id="chReg"></div>`, false, D()) +
+      card("Registration to cash","Where the webinar audience ends up", funnel([
+        {label:"Registered", value:regs.length},
+        {label:"Calls booked", value:w.booked},
+        {label:"Showed", value:w.showed},
+        {label:"Offers made", value:w.offers},
+        {label:"Closed", value:w.closes}
+      ]) + `<div class="collkey" style="margin-top:14px">
+        <span>Registration to booked call ${pct(w.booked, regs.length)}</span>
+        <span>Cash per registration ${regs.length? money(w.cash/regs.length) : "—"}</span>
+      </div>`, false, D()) +
+      `<div class="two">
+        ${card("Where they came from","Platform", bars(tally(regs,"platform",6).map(x=>({name:x.name,v:x.value})),"v",CO.cyan,num), false, D())}
+        ${card("Placement","Top 6", bars(tally(regs,"placement",6).map(x=>({name:x.name,v:x.value})),"v",CO.blue,num), false, D())}
+      </div>` +
+      card("Ads driving signups","Top 6 by registrations",
+        bars(tally(regs,"ad",6).map(x=>({name:x.name.split("|")[0].trim(), v:x.value})),"v",CO.violet,num), false, D()) +
+      `<div class="two">
+        ${card("Who is registering","Career status",'<div id="chCareer"></div>', false, D())}
+        ${card("Specialty","Top specialties",'<div id="chSpec"></div>', false, D())}
+      </div>` +
+      (!tagged ? card("", "", `<div class="empty">
+          No logged call has matched a registrant yet.<br>
+          <span style="font-size:12.5px">Calls are tagged automatically when the lead email matches someone on the
+          registration list. Adding the webinar question in Tally catches the rest.</span></div>`, false, 0) : "") +
+      card("Webinar leads", w.booked + " of " + pIn.length + " logged calls", `<div class="tiles c4">`+[
+        stat("Calls booked","",{n:w.booked}),
+        stat("Showed","",{n:w.showed}),
+        stat("No shows","",{n:w.noShow}),
+        stat("Show rate", pct(w.showed,w.booked), {n:pctN(w.showed,w.booked), fmt:"pct"}),
+        stat("Offers made","",{n:w.offers}),
+        stat("Closed","",{n:w.closes}),
+        stat("Close rate on shows", pct(w.closes,w.showed), {n:pctN(w.closes,w.showed), fmt:"pct", accent:true}),
+        stat("Deposits","",{n:w.deposits}),
+        stat("Cash collected","",{n:w.cash, fmt:"money", tone:CO.cyan}),
+        stat("Revenue contracted","",{n:w.revenue, fmt:"money"}),
+        stat("Still to collect","",{n:w.revenue-w.cash, fmt:"money", tone:CO.amber}),
+        stat("Cash per booked call", w.booked?money(w.cash/w.booked):"—", {n:w.booked?w.cash/w.booked:null, fmt:"money"})
+      ].join("")+`</div>`, false, D()) +
+      card("Webinar against every other lead","Webinar in cyan",
+        `<div class="scroll"><table><thead><tr><th></th>
+          <th style="text-align:right">Webinar</th><th style="text-align:right">Other leads</th></tr></thead><tbody>`+
+        cmpRow("Calls booked", w.booked, o.booked, num) +
+        cmpRow("Showed", w.showed, o.showed, num) +
+        cmpRow("Show rate", pctN(w.showed,w.booked), pctN(o.showed,o.booked), v=>v===null?"—":v.toFixed(1)+"%") +
+        cmpRow("Offers made", w.offers, o.offers, num) +
+        cmpRow("Closed", w.closes, o.closes, num) +
+        cmpRow("Close rate on shows", pctN(w.closes,w.showed), pctN(o.closes,o.showed), v=>v===null?"—":v.toFixed(1)+"%") +
+        cmpRow("Cash collected", w.cash, o.cash, money) +
+        cmpRow("Revenue contracted", w.revenue, o.revenue, money) +
+        cmpRow("Avg deal size", w.closes?w.revenue/w.closes:null, o.closes?o.revenue/o.closes:null, v=>v===null?"—":money(v)) +
+        cmpRow("Cash per booked call", w.booked?w.cash/w.booked:null, o.booked?o.cash/o.booked:null, v=>v===null?"—":money(v)) +
+        `</tbody></table></div>`, true, D()) +
+      `<div class="two">
+        ${card("Webinar outcome mix","",'<div id="chW"></div>', false, D())}
+        ${card("Cash by outcome","", bars(
+          statusCounts(web).map(s=>({name:s.name, cash:sum(web.filter(r=>r.status===s.name),"cash")})),
+          "cash", CO.cyan, money), false, D())}
+      </div>` +
+      card("Webinar calls, newest first", web.length+" calls",
+        `<div class="calls">${web.map(callRow).join("") || '<div class="empty">No webinar calls in this range yet.</div>'}</div>`,
+        true, D());
+    after.push(()=>donut(document.getElementById("chW"), statusCounts(web)));
+    after.push(()=>colChart(document.getElementById("chReg"), dayPts, CO.cyan));
+    after.push(()=>donut(document.getElementById("chCareer"), tally(regs,"career",6)));
+    after.push(()=>donut(document.getElementById("chSpec"), tally(regs,"specialty",6)));
+  }
+
   requestAnimationFrame(()=>{
     after.forEach(fn=>fn());
     view.querySelectorAll(".fill[data-w]").forEach(el=>{ el.style.width = el.dataset.w+"%"; });
@@ -1140,7 +1636,7 @@ document.getElementById("from").addEventListener("change", e=>{ S.from=e.target.
 document.getElementById("to").addEventListener("change", e=>{ S.to=e.target.value; S.rangeTouched=true; save(); render(); });
 document.getElementById("allTime").addEventListener("click", ()=>{
   S.rangeTouched=false;
-  const days=[...S.closer,...S.setter,...S.post,...S.dm].map(r=>r._key).filter(Boolean).sort();
+  const days=[...S.closer,...S.setter,...S.post,...S.dm,...S.web].map(r=>r._key).filter(Boolean).sort();
   if(days.length){ S.from=days[0]; S.to=days[days.length-1]; }
   document.getElementById("from").value=S.from; document.getElementById("to").value=S.to;
   save(); render();
@@ -1155,14 +1651,15 @@ document.getElementById("load").addEventListener("click", ()=>{
     closer: document.getElementById("closerUrl").value.trim(),
     setter: document.getElementById("setterUrl").value.trim(),
     post:   document.getElementById("postUrl").value.trim(),
-    dm:     document.getElementById("dmUrl").value.trim()
+    dm:     document.getElementById("dmUrl").value.trim(),
+    web:    document.getElementById("webUrl").value.trim()
   };
   save(); loadLive();
 });
 document.getElementById("reset").addEventListener("click", ()=>{
   S.live = false;
-  applyData(SNAPSHOT_CLOSER, SNAPSHOT_SETTER, SNAPSHOT_POST, SNAPSHOT_DM);
-  setStatus("Snapshot · 3 Sep, 10:45 AM"); render();
+  applyData(SNAPSHOT_CLOSER, SNAPSHOT_SETTER, SNAPSHOT_POST, SNAPSHOT_DM, SNAPSHOT_WEB);
+  setStatus("Snapshot · 26 Sep"); render();
 });
 let rt; window.addEventListener("resize", ()=>{
   clearTimeout(rt); rt=setTimeout(()=>{ moveInd(); (window._redraw||[]).forEach(f=>f()); }, 160);
@@ -1183,7 +1680,8 @@ document.getElementById("closerUrl").value = S.urls.closer;
 document.getElementById("setterUrl").value = S.urls.setter;
 document.getElementById("postUrl").value   = S.urls.post;
  document.getElementById("dmUrl").value     = S.urls.dm || gviz(IDS.dm);
-applyData(SNAPSHOT_CLOSER, SNAPSHOT_SETTER, SNAPSHOT_POST, SNAPSHOT_DM);
+ document.getElementById("webUrl").value    = S.urls.web || gviz(IDS.web);
+applyData(SNAPSHOT_CLOSER, SNAPSHOT_SETTER, SNAPSHOT_POST, SNAPSHOT_DM, SNAPSHOT_WEB);
 render();
 loadLive();                       // always pull fresh on open
 requestAnimationFrame(moveInd);
