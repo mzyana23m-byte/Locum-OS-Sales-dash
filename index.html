@@ -193,9 +193,19 @@ td.wide{white-space:pre-wrap;font-size:12.5px;max-width:320px;font-variant-numer
 
 /* hero, two headline figures */
 .heroCard{padding:22px 22px 8px}
-.heroTop{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+.heroTop{display:grid;grid-template-columns:repeat(4,1fr);gap:0;align-items:start}
+.heroTop .figure{padding:0 22px;border-left:1px solid var(--stroke)}
+.heroTop .figure:first-child{padding-left:0;border-left:none}
+.heroTop .figure.lead .num{font-size:clamp(34px,4.4vw,50px)}
+.num{font-size:clamp(26px,3vw,34px);font-weight:700;letter-spacing:-.04em;line-height:1.05;margin-top:4px}
+.num.cyan{background:linear-gradient(96deg,var(--cyan),#8DEDE8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.num.gold{background:linear-gradient(96deg,var(--amber),#FFD98C);-webkit-background-clip:text;background-clip:text;color:transparent}
+.num.violet{color:var(--violet)}
+.heroMonth{font-size:13px;color:var(--muted);margin-bottom:16px}
+@media (max-width:900px){.heroTop{grid-template-columns:1fr 1fr;row-gap:20px}
+  .heroTop .figure:nth-child(3){padding-left:0;border-left:none}}
 .figure .big{margin-top:2px}
-.figure.right{text-align:right;border-left:1px solid var(--stroke);padding-left:22px}
+
 .big.gold{background:linear-gradient(96deg,var(--amber),#FFD98C);-webkit-background-clip:text;
   background-clip:text;color:transparent}
 .sub2{margin-top:8px;font-size:13px}
@@ -1400,50 +1410,57 @@ function render(){
     const monthRows = S.closer.filter(r=>r._date && r._key.slice(0,7)===thisMonthKey);
     const newRevMonth = monthRows.reduce((a,r)=>a+(r.revenue||0),0);
     const rebillLogged = monthRows.reduce((a,r)=>a+(r.rebill||0),0);
+    const newCashMonth = monthRows.reduce((a,r)=>a+(r.newCash||0),0);
+    const bankedMonth  = monthRows.reduce((a,r)=>a+(r.cash||0),0);
+    const closesMonth  = monthRows.reduce((a,r)=>a+(r.closed||0),0);
+    const owedMonth    = Math.max(0, newRevMonth - newCashMonth);
     const inferredRows = monthRows.filter(r=>r._inferred);
     const inferred = inferredRows.reduce((a,r)=>a+(r.rebill||0),0);
 
     view.innerHTML =
       `<section class="card heroCard in">
+        <div class="heroMonth">${esc(M.curName)} ${new Date().getFullYear()}</div>
         <div class="heroTop">
           <div class="figure">
             <div class="lbl">Cash collected</div>
-            <div class="big tnum" data-n="${cs.cash}" data-fmt="money">0</div>
-            <div class="lbl sub2">${pct(cs.newCash,cs.revenue)} of everything signed, actually banked${cs.rebill?" \u00b7 includes "+money(cs.rebill)+" of rebills":""}</div>
+            <div class="num tnum" data-n="${newCashMonth}" data-fmt="money">0</div>
+            <div class="lbl sub2">from deals closed this month</div>
           </div>
-          <div class="figure right">
-            <div class="lbl">Revenue contracted</div>
-            <div class="big gold tnum" data-n="${cs.revenue}" data-fmt="money">0</div>
-            <div class="lbl sub2"><span style="color:var(--amber);font-weight:600">${money(Math.max(0,cs.revenue-cs.newCash))}</span> still to collect</div>
+          <div class="figure">
+            <div class="lbl">Rebills</div>
+            <div class="num violet tnum" data-n="${rebillLogged}" data-fmt="money">0</div>
+            <div class="lbl sub2">instalments from earlier deals</div>
+          </div>
+          <div class="figure lead">
+            <div class="lbl">Total cash collected</div>
+            <div class="num cyan tnum" data-n="${bankedMonth}" data-fmt="money">0</div>
+            <div class="lbl sub2">everything banked, rebills included</div>
+          </div>
+          <div class="figure">
+            <div class="lbl">Revenue signed</div>
+            <div class="num gold tnum" data-n="${newRevMonth}" data-fmt="money">0</div>
+            <div class="lbl sub2">${closesMonth} deal${closesMonth===1?"":"s"} closed this month</div>
           </div>
         </div>
-        <div class="collbar"><div class="collfill" data-w="${cs.revenue?Math.min(100,(cs.newCash/cs.revenue)*100):0}"></div></div>
+        <div class="collbar"><div class="collfill" data-w="${newRevMonth?Math.min(100,(newCashMonth/newRevMonth)*100):0}"></div></div>
         <div class="collkey">
-          <span><i style="background:${CO.cyan}"></i>Collected ${money(cs.newCash)}</span>
-          <span><i style="background:rgba(242,180,65,.55)"></i>Outstanding ${money(Math.max(0,cs.revenue-cs.newCash))}</span>
+          <span><i style="background:${CO.cyan}"></i>Collected on this month's deals ${money(newCashMonth)}</span>
+          <span><i style="background:rgba(242,180,65,.55)"></i>Still owed on them ${money(owedMonth)}</span>
         </div>
-        <div class="mini-row">
-          <div class="mini"><div class="lbl">Closes</div><div class="val tnum" data-n="${cs.closed}" data-fmt="num">0</div></div>
-          <div class="mini"><div class="lbl">Calls taken</div><div class="val tnum" data-n="${cs.showed}" data-fmt="num">0</div></div>
-          <div class="mini"><div class="lbl">Sets booked</div><div class="val tnum" data-n="${ss.sets+ds.sets}" data-fmt="num">0</div></div>
-          <div class="mini"><div class="lbl">Avg deal size</div><div class="val tnum" data-n="${cs.closed?cs.revenue/cs.closed:0}" data-fmt="money">0</div></div>
-          <div class="mini"><div class="lbl">Avg collected per deal</div><div class="val tnum" data-n="${cs.closed?cs.newCash/cs.closed:0}" data-fmt="money">0</div></div>
-        </div>
-        <div id="ch1" style="margin-top:14px"></div>
+        <div id="ch1" style="margin-top:18px"></div>
         <div class="collkey"><span>Cash collected by day of month, this month against last</span>
-        <span>${M.prevToDate? (M.curTotal>=M.prevToDate ? money(M.curTotal-M.prevToDate)+" ahead of where you were on day "+M.today : money(M.prevToDate-M.curTotal)+" behind day "+M.today+" last month") : ""}</span></div>
+        <span>${M.prevToDate? (M.curTotal>=M.prevToDate ? money(M.curTotal-M.prevToDate)+" ahead of day "+M.today+" last month" : money(M.prevToDate-M.curTotal)+" behind day "+M.today+" last month") : ""}</span></div>
       </section>` +
       (latest ? card("Most recent call", ago(latest._date), `<div class="calls" style="margin:-16px -19px -19px">${callRow(latest)}</div>`, false, D()) : "") +
       forecastCard(cIn, D(), true) +
-      card(M.curName + " so far", "New business plus rebills already committed", `<div class="tiles c4">`+[
-        stat("New contracts signed","",{n:newRevMonth, fmt:"money"}),
-        stat("Rebills due this month","",{n:rebillsNow, fmt:"money", tone:CO.violet}),
-        stat("Total expected this month","",{n:newRevMonth+rebillsNow, fmt:"money", accent:true}),
-        stat("Cash banked this month","",{n:M.curTotal, fmt:"money", tone:CO.cyan, sub:"incl. "+money(rebillLogged)+" rebills"})
+      card(M.curName + " detail", "", `<div class="tiles c4">`+[
+        stat("Avg deal size","",{n:closesMonth?newRevMonth/closesMonth:0, fmt:"money"}),
+        stat("Still owed on this month's deals","",{n:owedMonth, fmt:"money", tone:CO.amber}),
+        stat("Rebills expected this month","",{n:rebillsNow, fmt:"money", tone:CO.violet}),
+        stat("Rebills still to land","",{n:Math.max(0,rebillsNow-rebillLogged), fmt:"money"})
       ].join("")+`</div>
-      <div class="collkey"><span>Rebills are instalments from deals closed in earlier months, so they never show as new closes.</span>
-      ${inferred>0 ? `<span style="color:${CO.violet}">${money(inferred)} read as rebills from days with cash but no
-        new revenue (${inferredRows.map(r=>r._key.slice(5)).join(", ")}). Fill the rebill box in and your number is used instead.</span>` : ""}</div>`, false, D()) +
+      <div class="collkey"><span>Money owed on every open plan, not just this month's, is in the recurring section at the bottom.</span></div>`,
+      false, D()) +
       card("Pipeline, first dial to signed","Setter activity feeding closer results", funnel([
         {label:"Dials",value:ss.dials},{label:"Connections",value:ss.connections},
         {label:"Qualified convos",value:ss.qualConvos},{label:"Sets booked",value:ss.sets+ds.sets},
