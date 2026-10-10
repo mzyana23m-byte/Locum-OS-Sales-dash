@@ -223,6 +223,17 @@ td.wide{white-space:pre-wrap;font-size:12.5px;max-width:320px;font-variant-numer
 .col{transform-origin:center bottom;animation:grow .75s var(--ease) both}
 @keyframes grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
 
+/* hover readout */
+.chartbox{position:relative}
+.tip{position:absolute;z-index:6;pointer-events:none;background:rgba(8,32,38,.97);
+  border:1px solid var(--stroke);border-radius:11px;padding:10px 12px;font-size:12.5px;white-space:nowrap;
+  box-shadow:0 10px 30px -10px rgba(0,0,0,.8);transition:opacity .12s var(--ease)}
+.tip b{display:block;margin-bottom:6px;font-size:11.5px;color:var(--muted);font-weight:500}
+.tip span{display:flex;align-items:center;gap:8px;line-height:1.75}
+.tip i{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
+.tip em{font-style:normal;font-weight:600;margin-left:auto;padding-left:18px;font-variant-numeric:tabular-nums}
+.guide{position:absolute;top:0;width:1px;background:rgba(255,255,255,.22);pointer-events:none;z-index:5}
+
 /* forecast */
 .goal{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:18px;
   padding-top:16px;border-top:1px solid var(--stroke)}
@@ -903,6 +914,44 @@ const linkify = u => {
 };
 
 /* ================= charts ================= */
+function attachHover(box, cfg){
+  const svg = box.querySelector("svg"); if(!svg || !cfg.X.length) return;
+  box.classList.add("chartbox");
+  const tip = document.createElement("div"); tip.className = "tip"; tip.style.display = "none";
+  const guide = document.createElement("div"); guide.className = "guide"; guide.style.display = "none";
+  box.appendChild(guide); box.appendChild(tip);
+  const W = +svg.getAttribute("width"), H = +svg.getAttribute("height");
+  function move(e){
+    const pt = e.touches ? e.touches[0] : e;
+    const r = svg.getBoundingClientRect(), b = box.getBoundingClientRect();
+    const scale = r.width / W;
+    const x = (pt.clientX - r.left) / scale;
+    let best = 0, bd = Infinity;
+    cfg.X.forEach((px,i)=>{ const d = Math.abs(px-x); if(d<bd){ bd=d; best=i; } });
+    const it = cfg.items[best];
+    if(!it){ hide(); return; }
+    const vals = it.vals.filter(v => v.v !== null && v.v !== undefined);
+    if(!vals.length){ hide(); return; }
+    tip.innerHTML = `<b>${esc(it.label)}</b>` + vals.map(v =>
+      `<span><i style="background:${v.color}"></i>${esc(v.name)}<em>${esc(v.text)}</em></span>`).join("");
+    const gx = cfg.X[best]*scale + (r.left - b.left);
+    guide.style.left = gx + "px";
+    guide.style.height = (H*scale) + "px";
+    guide.style.top = (r.top - b.top) + "px";
+    guide.style.display = "block";
+    tip.style.display = "block";
+    const tw = tip.offsetWidth;
+    tip.style.left = Math.max(2, Math.min(gx + 14, box.clientWidth - tw - 2)) + "px";
+    tip.style.top = Math.max(2, (pt.clientY - b.top) - tip.offsetHeight - 14) + "px";
+  }
+  function hide(){ tip.style.display = "none"; guide.style.display = "none"; }
+  svg.addEventListener("mousemove", move);
+  svg.addEventListener("mouseleave", hide);
+  svg.addEventListener("touchstart", move, {passive:true});
+  svg.addEventListener("touchmove", move, {passive:true});
+  svg.addEventListener("touchend", hide);
+}
+
 function niceMax(v){ if(v<=0) return 1;
   const e=Math.pow(10,Math.floor(Math.log10(v))), f=v/e;
   return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*e; }
@@ -933,6 +982,13 @@ function lineChart(box, data){
   box.innerHTML=`<svg width="${W}" height="${H}" style="max-width:100%;overflow:visible">${g}${paths}</svg>
     <div class="legend"><span><i style="background:${CO.cyan}"></i>Cash collected</span>
     <span><i style="background:${CO.amber}"></i>Revenue</span></div>`;
+  attachHover(box, {
+    X: data.map((d,i)=>X(i)),
+    items: data.map(d=>({label:d.label, vals:[
+      {name:"Cash collected", color:CO.cyan, v:d.cash, text:money(d.cash)},
+      {name:"Revenue", color:CO.amber, v:d.revenue, text:money(d.revenue)}
+    ]}))
+  });
   if(REDUCE) return;
   box.querySelectorAll(".pt").forEach(c=>{ c.style.opacity=0; c.style.animation="rise .4s var(--ease) forwards"; });
   box.querySelectorAll(".ln").forEach(p=>{
@@ -1107,6 +1163,13 @@ function projChart(box, f, target){
   box.innerHTML = `<svg width="${W}" height="${H}" style="max-width:100%;overflow:visible">${g}${s}</svg>
     <div class="legend"><span><i style="background:${CO.cyan}"></i>Cash so far</span>
     <span><i style="background:${CO.cyan};opacity:.5"></i>Projected at current pace</span></div>`;
+  attachHover(box, {
+    X: pts.map((p,i)=>X(i)),
+    items: pts.map(p=>({label:"Day "+p.label, vals:[
+      {name:p.proj?"Projected":"Collected so far", color:CO.cyan, v:p.v, text:money(p.v)},
+      {name:"Target", color:CO.amber, v:target>0?target:null, text:target>0?money(target):""}
+    ]}))
+  });
   if(REDUCE) return;
   box.querySelectorAll(".ln").forEach(pl=>{
     const L = pl.getTotalLength();
@@ -1168,6 +1231,16 @@ function cmpChart(box, M){
   box.innerHTML=`<svg width="${W}" height="${H}" style="max-width:100%;overflow:visible">${g}${s}</svg>
     <div class="legend"><span><i style="background:${CO.cyan}"></i>${esc(M.curName)} ${money(M.curTotal)}</span>
     <span><i style="background:${CO.dim}"></i>${esc(M.prevName)} ${money(M.prevTotal)}</span></div>`;
+  attachHover(box, {
+    X: pts.map((p,i)=>X(i)),
+    items: pts.map(p=>({label:"Day "+p.label, vals:[
+      {name:M.curName, color:CO.cyan, v:p.cur, text:p.cur===null?"":money(p.cur)},
+      {name:M.prevName, color:CO.dim, v:p.prev, text:p.prev===null?"":money(p.prev)},
+      {name:"Difference", color:"rgba(255,255,255,.18)",
+       v:(p.cur===null||p.prev===null)?null:p.cur-p.prev,
+       text:(p.cur===null||p.prev===null)?"":((p.cur-p.prev>=0?"+":"-")+money(Math.abs(p.cur-p.prev)))}
+    ]}))
+  });
   if(REDUCE) return;
   box.querySelectorAll(".ln").forEach(pl=>{
     const L=pl.getTotalLength(), keep=pl.getAttribute("stroke-dasharray");
@@ -1194,6 +1267,10 @@ function colChart(box, pts, color){
     if(pts.length<=14) s+=`<text x="${x+w/2}" y="${H-8}" fill="${CO.dim}" font-size="10" text-anchor="middle">${esc(p.label)}</text>`;
   });
   box.innerHTML=`<svg width="${W}" height="${H}" style="max-width:100%">${s}</svg>`;
+  attachHover(box, {
+    X: pts.map((p,i)=>P.l+i*bw+bw*0.5),
+    items: pts.map(p=>({label:p.label, vals:[{name:"Registrations", color:color, v:p.v, text:num(p.v)}]}))
+  });
 }
 
 /* ================= state ================= */
