@@ -1391,6 +1391,21 @@ function forecastCard(rows, delay, withGoal){
     tiles + `<div style="margin-top:18px" id="chF"></div>` + goal, false, delay);
 }
 
+function rangeLabel(){
+  const names = {yesterday:"Yesterday", "7":"Last 7 days", "30":"Last 30 days",
+                 thismonth:"This month", lastmonth:"Last month"};
+  if(S.preset && names[S.preset]){
+    if(S.preset==="yesterday") return "Yesterday \u00b7 " + new Date(S.from+"T00:00:00")
+      .toLocaleDateString([], {day:"numeric", month:"short"});
+    return names[S.preset] + " \u00b7 " + new Date(S.from+"T00:00:00").toLocaleDateString([], {day:"numeric", month:"short"})
+      + " to " + new Date(S.to+"T00:00:00").toLocaleDateString([], {day:"numeric", month:"short"});
+  }
+  if(!S.from || !S.to) return "All dates";
+  if(S.from===S.to) return new Date(S.from+"T00:00:00").toLocaleDateString([], {weekday:"long", day:"numeric", month:"long"});
+  return new Date(S.from+"T00:00:00").toLocaleDateString([], {day:"numeric", month:"short"}) + " to "
+       + new Date(S.to+"T00:00:00").toLocaleDateString([], {day:"numeric", month:"short"});
+}
+
 function render(){
   const cIn=S.closer.filter(inRange), sIn=S.setter.filter(inRange), pIn=S.post.filter(inRange);
   const view=document.getElementById("view"); const after=[];
@@ -1419,45 +1434,45 @@ function render(){
 
     view.innerHTML =
       `<section class="card heroCard in">
-        <div class="heroMonth">${esc(M.curName)} ${new Date().getFullYear()}</div>
+        <div class="heroMonth">${esc(rangeLabel())}</div>
         <div class="heroTop">
           <div class="figure">
             <div class="lbl">Cash collected</div>
-            <div class="num tnum" data-n="${newCashMonth}" data-fmt="money">0</div>
-            <div class="lbl sub2">from deals closed this month</div>
+            <div class="num tnum" data-n="${cs.newCash}" data-fmt="money">0</div>
+            <div class="lbl sub2">from deals closed in this range</div>
           </div>
           <div class="figure">
             <div class="lbl">Rebills</div>
-            <div class="num violet tnum" data-n="${rebillLogged}" data-fmt="money">0</div>
+            <div class="num violet tnum" data-n="${cs.rebill}" data-fmt="money">0</div>
             <div class="lbl sub2">instalments from earlier deals</div>
           </div>
           <div class="figure lead">
             <div class="lbl">Total cash collected</div>
-            <div class="num cyan tnum" data-n="${bankedMonth}" data-fmt="money">0</div>
+            <div class="num cyan tnum" data-n="${cs.cash}" data-fmt="money">0</div>
             <div class="lbl sub2">everything banked, rebills included</div>
           </div>
           <div class="figure">
             <div class="lbl">Revenue signed</div>
-            <div class="num gold tnum" data-n="${newRevMonth}" data-fmt="money">0</div>
-            <div class="lbl sub2">${closesMonth} deal${closesMonth===1?"":"s"} closed this month</div>
+            <div class="num gold tnum" data-n="${cs.revenue}" data-fmt="money">0</div>
+            <div class="lbl sub2">${cs.closed} deal${cs.closed===1?"":"s"} closed</div>
           </div>
         </div>
-        <div class="collbar"><div class="collfill" data-w="${newRevMonth?Math.min(100,(newCashMonth/newRevMonth)*100):0}"></div></div>
+        <div class="collbar"><div class="collfill" data-w="${cs.revenue?Math.min(100,(cs.newCash/cs.revenue)*100):0}"></div></div>
         <div class="collkey">
-          <span><i style="background:${CO.cyan}"></i>Collected on this month's deals ${money(newCashMonth)}</span>
-          <span><i style="background:rgba(242,180,65,.55)"></i>Still owed on them ${money(owedMonth)}</span>
+          <span><i style="background:${CO.cyan}"></i>Collected on these deals ${money(cs.newCash)}</span>
+          <span><i style="background:rgba(242,180,65,.55)"></i>Still owed on them ${money(Math.max(0,cs.revenue-cs.newCash))}</span>
         </div>
         <div id="ch1" style="margin-top:18px"></div>
-        <div class="collkey"><span>Cash collected by day of month, this month against last</span>
+        <div class="collkey"><span>Cash by day of month \u2014 ${esc(M.curName)} against ${esc(M.prevName)}, always the full months regardless of the filter above</span>
         <span>${M.prevToDate? (M.curTotal>=M.prevToDate ? money(M.curTotal-M.prevToDate)+" ahead of day "+M.today+" last month" : money(M.prevToDate-M.curTotal)+" behind day "+M.today+" last month") : ""}</span></div>
       </section>` +
       (latest ? card("Most recent call", ago(latest._date), `<div class="calls" style="margin:-16px -19px -19px">${callRow(latest)}</div>`, false, D()) : "") +
       forecastCard(cIn, D(), true) +
-      card(M.curName + " detail", "", `<div class="tiles c4">`+[
-        stat("Avg deal size","",{n:closesMonth?newRevMonth/closesMonth:0, fmt:"money"}),
-        stat("Still owed on this month's deals","",{n:owedMonth, fmt:"money", tone:CO.amber}),
-        stat("Rebills expected this month","",{n:rebillsNow, fmt:"money", tone:CO.violet}),
-        stat("Rebills still to land","",{n:Math.max(0,rebillsNow-rebillLogged), fmt:"money"})
+      card("Detail \u2014 " + rangeLabel(), "", `<div class="tiles c4">`+[
+        stat("Avg deal size","",{n:cs.closed?cs.revenue/cs.closed:0, fmt:"money"}),
+        stat("Still owed on these deals","",{n:Math.max(0,cs.revenue-cs.newCash), fmt:"money", tone:CO.amber}),
+        stat("Rebills expected in "+M.curName,"",{n:rebillsNow, fmt:"money", tone:CO.violet}),
+        stat("Of those, still to land","",{n:Math.max(0,rebillsNow-rebillLogged), fmt:"money"})
       ].join("")+`</div>
       <div class="collkey"><span>Money owed on every open plan, not just this month's, is in the recurring section at the bottom.</span></div>`,
       false, D()) +
