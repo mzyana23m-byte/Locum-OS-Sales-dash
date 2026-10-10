@@ -58,6 +58,9 @@ a:hover{text-decoration:underline}
 .seg button.on{color:#fff;font-weight:600}
 
 .spacer{flex:1}
+.presets{display:flex;gap:6px;flex-wrap:wrap}
+.presets .btn{padding:7px 11px}
+.presets .btn.on{background:var(--cyan);color:#052326;border-color:var(--cyan);font-weight:600}
 .chip{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border:1px solid var(--stroke);
   border-radius:10px;padding:6px 10px;font-size:12.5px;color:var(--muted);transition:background .25s var(--ease)}
 .chip:hover{background:rgba(255,255,255,.1)}
@@ -256,10 +259,17 @@ td.wide{white-space:pre-wrap;font-size:12.5px;max-width:320px;font-variant-numer
     <div class="spacer"></div>
     <span class="chip">From <input type="date" id="from"></span>
     <span class="chip">To <input type="date" id="to"></span>
-    <button class="btn ghost" id="allTime">All dates</button>
+    <span class="presets">
+      <button class="btn ghost" data-preset="yesterday">Yesterday</button>
+      <button class="btn ghost" data-preset="7">7 days</button>
+      <button class="btn ghost" data-preset="30">30 days</button>
+      <button class="btn ghost" data-preset="thismonth">This month</button>
+      <button class="btn ghost" data-preset="lastmonth">Last month</button>
+      <button class="btn ghost" id="allTime">All dates</button>
+    </span>
     <button class="btn" id="refresh">Refresh</button>
     <button class="btn ghost" id="toggleSetup">Sheets</button>
-    <span id="status">Snapshot · 26 Sep</span>
+    <span id="status">Snapshot · 10 Oct</span>
   </div>
 </div>
 
@@ -295,30 +305,31 @@ td.wide{white-space:pre-wrap;font-size:12.5px;max-width:320px;font-variant-numer
 
 <script>
 /* ================= data ================= */
-const SNAPSHOT_CLOSER = `Closer Name,DATE OF EOD,Calls On Calendar,LIve Calls,No Shows ,Rescheduling,Qualified Calls,Offers Made,Deposits,Closed,Followups/Dials,Cash Collected,Total Revenue,Rate Today From 1-10,What objections are coming up that are preventing closes?,Is there anything you are struggling/need help with?
-Ali,2026-08-30,1,1,0,0,1,1,0,1,0,7500,7500,8,None,.
-Ali,2026-08-31,6,4,0,2,3,4,0,0,0,1000,1000,5,Parner/Parent,"doctors want to discuss with their partner before deciding. 
-some doctors objected to price; showed them the money back guarantee, still needed to ""think about it""
-doctors are generally over analyzers, and need to think through things more so than the average entrepreneur whose invested in coaching programs before. 
-
-We should give docs until midnight on the day of to invest at the $7500 price point. 
-
-Payment plan was offered to Omar and Malika; both still politely declined. 
-
-Maybe need to show them more value of the program, so they feel dumb saying no. 
-
-"
-Ali,2026-09-01,3,2,0,1,2,2,0,2,1,2000,8000,7,None,"Nothing today, one who didn’t close is highly qualified used to paying $25k for masterclasses, said he’d be interested in VIP in a few months time, but said he’d be willing to pay for velocity tomorrow; said he didn’t have his card with him. "
-Ali,2026-09-02,2,1,0,1,1,1,0,1,0,9500,15500,8,None,.
-Ali,2026-09-03,2,1,0,1,1,1,0,1,0,2000,8000,6,Other,omar filled eod for ali
-Ali,2026-09-07,1,1,0,0,1,1,0,1,0,1000,1000,5,Parner/Parent,.
-Ali,2026-09-08,0,0,0,0,0,0,0,2,0,3000,9000,5,None,.
-Ali,2026-09-11,1,1,0,0,1,1,0,1,0,2000,2000,5,Other,.
-Ali,2026-09-15,1,1,0,0,1,1,0,1,0,2500,8000,7,None,.
-Ali,2026-09-16,1,1,0,0,1,1,0,1,0,2000,8000,7,Money,"Lead didn’t have money as he was between jobs, so cash was constrained. Downsold to Lite and said he’d like to upgrade once he starts working to Velocity. "
-Ali,2026-09-22,2,2,1,2,2,0,0,0,0,0,0,3,Other,Gagandeep was driving 
-Ali,2026-09-23,2,1,1,1,1,1,0,0,0,0,0,4,Money,Isma had just graduated and hasn’t even gotten her first paycheck from employer. 
-Ali,2026-09-24,2,1,1,0,1,1,0,0,0,0,0,4,None,"Extended the offer for the VIP package for JAMES, he did not have any objections, said he’s very interested, and said that he just had to take another call and would be interested in registering later for signing up later."`;
+const SNAPSHOT_CLOSER = `Closer Name,DATE OF EOD,Calls On Calendar,LIve Calls,No Shows ,Rescheduling,Qualified Calls,Offers Made,Deposits,Closed,Followups/Dials,Cash Collected,Total Revenue,Rate Today From 1-10,What objections are coming up that are preventing closes?,Cash From Rebills Today
+Ali,2026-08-30,1,1,0,0,1,1,0,1,0,7500,7500,8,None,
+Ali,2026-08-31,6,4,0,2,3,4,0,0,0,1000,1000,5,Parner/Parent,
+Ali,2026-09-01,3,2,0,1,2,2,0,2,1,2000,8000,7,None,
+Ali,2026-09-02,2,1,0,1,1,1,0,1,0,9500,15500,8,None,
+Ali,2026-09-03,2,1,0,1,1,1,0,1,0,2000,8000,6,Other,
+Ali,2026-09-07,1,1,0,0,1,1,0,1,0,1000,1000,5,Parner/Parent,
+Ali,2026-09-08,0,0,0,0,0,0,0,2,0,3000,9000,5,None,
+Ali,2026-09-11,1,1,0,0,1,1,0,1,0,2000,2000,5,Other,
+Ali,2026-09-15,1,1,0,0,1,1,0,1,0,2500,8000,7,None,
+Ali,2026-09-16,1,1,0,0,1,1,0,1,0,2000,8000,7,Money,
+Ali,2026-09-22,2,2,1,2,2,0,0,0,0,0,0,3,Other,
+Ali,2026-09-23,2,1,1,1,1,1,0,0,0,0,0,4,Money,
+Ali,2026-09-24,2,1,1,0,1,1,0,0,0,0,0,4,None,
+Ali,2026-09-26,0,0,0,0,0,0,0,0,0,0,0,3,None,
+Ali,2026-09-27,1,1,0,0,1,1,0,0,0,0,0,5,Other,
+Ali,2026-09-28,2,1,0,0,1,1,0,0,0,0,0,5,Other,
+Ali,2026-09-29,1,1,0,0,1,1,0,1,0,2500,10000,6,None,
+Ali,2026-09-30,3,3,0,0,3,3,0,1,2,2500,10000,6,None,
+Ali,2026-10-01,1,1,0,0,1,1,0,0,0,0,0,6,None,2000
+Ali,2026-10-02,2,1,0,1,1,1,0,1,0,2500,10000,6,None,
+Ali,2026-10-03,0,0,0,0,0,0,0,0,0,0,0,5,Other,2000
+Ali,2026-10-06,0,0,0,0,0,0,0,0,0,0,0,6,Other,2000
+Ali,2026-10-08,2,2,0,0,0,0,0,1,0,8000,8000,5,None,2000
+Ali,2026-10-09,2,2,0,1,2,2,0,0,0,0,0,6,None,`;
 
 const SNAPSHOT_SETTER = `Setter Name (Your Name),Date of EOD,Dials,Connections,Qualified Conversations,Sets,Calls on Calendar,Showed Calls,Closed Set,Cash Collected,Total Revenue,Rate Today,What Objections Are Coming Up That Are Preventing Sets,Notes From Today
 Cal,2026-08-30,50,6,6,7,0,1,1,7500,7500,7,Uncertainty,Alexis McCabe 
@@ -753,7 +764,8 @@ const CLOSER_MAP = {
   offers:["offersmade","offers"], deposits:["deposits","deposit"], closed:["closed","closes"],
   followups:["followupsdials","followups"], cash:["cashcollected","cash"], revenue:["totalrevenue","revenue"],
   rate:["ratetoday","ratetodayfrom110","rate"], objection:["whatobjections","objections","objection"],
-  notes:["isthereanythingyouarestrugglingneedhelpwith","struggling","notes"]
+  rebill:["cashfromrebillstoday","cashfromrebills","rebillcash","rebills","rebill"],
+  notes:["isthereanythingyouarestrugglingneedhelpwith","struggling","notesfromtoday"]
 };
 const SETTER_MAP = {
   name:["settername","setternameyourname","name"], date:["dateofeod","date"], dials:["dials"],
@@ -822,7 +834,7 @@ const dmStats = r => ({entries:r.length, leads:sum(r,"leads"), qualConvos:sum(r,
   downsells:sum(r,"downsells"), cash:sum(r,"cash"), revenue:sum(r,"revenue"), rate:avgRate(r)});
 
 const NUMERIC = new Set(["callsBooked","showed","noShows","reschedules","qualified","offers","deposits","closed",
-  "followups","cash","revenue","rate","dials","connections","qualConvos","sets","closedSets"]);
+  "followups","cash","revenue","rate","rebill","dials","connections","qualConvos","sets","closedSets"]);
 
 function shape(rows,map,numeric){
   if(!rows.length) return [];
@@ -847,7 +859,7 @@ function avgRate(rows){ const v=rows.map(r=>r.rate).filter(x=>x>0); return v.len
 const closerStats = r => ({entries:r.length, callsBooked:sum(r,"callsBooked"), showed:sum(r,"showed"),
   noShows:sum(r,"noShows"), reschedules:sum(r,"reschedules"), qualified:sum(r,"qualified"), offers:sum(r,"offers"),
   deposits:sum(r,"deposits"), closed:sum(r,"closed"), followups:sum(r,"followups"), cash:sum(r,"cash"),
-  revenue:sum(r,"revenue"), rate:avgRate(r)});
+  revenue:sum(r,"revenue"), rebill:sum(r,"rebill"), newCash:sum(r,"newCash"), rate:avgRate(r)});
 const setterStats = r => ({entries:r.length, dials:sum(r,"dials"), connections:sum(r,"connections"),
   qualConvos:sum(r,"qualConvos"), sets:sum(r,"sets"), callsBooked:sum(r,"callsBooked"), showed:sum(r,"showed"),
   closedSets:sum(r,"closedSets"), cash:sum(r,"cash"), revenue:sum(r,"revenue"), rate:avgRate(r)});
@@ -971,6 +983,38 @@ function funnel(steps){
   }).join("");
 }
 
+/* ============ expected recurring revenue ============ */
+function recurring(rows, instal, perPlan){
+  instal = Math.max(1, instal||2500);
+  const sched = {}, now = new Date();
+  const nowKey = now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
+  let outstanding = 0, planRows = 0, overdue = 0;
+  rows.forEach(r=>{
+    const owed = (r.revenue||0) > 0 ? Math.max(0, (r.revenue||0) - (r.newCash||0)) : 0;
+    if(owed <= 0 || !r._date) return;
+    outstanding += owed; planRows++;
+    // estimate how many plans that balance represents, so two deals in a day pay twice as fast
+    const plans = Math.max(1, Math.round(owed / (instal * Math.max(1,(perPlan||4)-1))));
+    const monthly = instal * plans;
+    let left = owed, m = 1;
+    while(left > 0.5 && m <= 36){
+      const d = new Date(r._date.getFullYear(), r._date.getMonth()+m, 1);
+      const k = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+      const amt = Math.min(monthly, left);
+      if(k < nowKey) overdue += amt; else sched[k] = (sched[k]||0) + amt;
+      left -= amt; m++;
+    }
+  });
+  const months = Object.keys(sched).sort().map(k=>{
+    const [y,mm] = k.split("-");
+    return {key:k, label:new Date(+y,+mm-1,1).toLocaleDateString([],{month:"short",year:"2-digit"}), v:sched[k]};
+  });
+  const nextN = n => months.slice(0,n).reduce((a,b)=>a+b.v,0);
+  return {outstanding, overdue, planRows, months,
+          next1:nextN(1), next3:nextN(3), next6:nextN(6),
+          scheduled:months.reduce((a,b)=>a+b.v,0)};
+}
+
 /* ================= forecast ================= */
 function forecast(rows){
   const days = [...new Set(rows.map(r=>r._key).filter(Boolean))].sort();
@@ -1065,6 +1109,64 @@ function projChart(box, f, target){
   });
 }
 
+function monthCompare(rows){
+  const now=new Date(), y=now.getFullYear(), m=now.getMonth();
+  const prev=new Date(y,m-1,1), py=prev.getFullYear(), pm=prev.getMonth();
+  const dim=new Date(y,m+1,0).getDate(), pdim=new Date(py,pm+1,0).getDate();
+  const cur=new Array(dim+1).fill(0), old=new Array(pdim+1).fill(0);
+  rows.forEach(r=>{
+    if(!r._date) return;
+    const d=r._date.getDate();
+    if(r._date.getFullYear()===y  && r._date.getMonth()===m)  cur[d]+=r.cash||0;
+    if(r._date.getFullYear()===py && r._date.getMonth()===pm) old[d]+=r.cash||0;
+  });
+  const out=[]; let a=0,b=0;
+  for(let d=1; d<=Math.max(dim,pdim); d++){
+    if(d<=dim)  a+=cur[d];
+    if(d<=pdim) b+=old[d];
+    out.push({label:String(d), cur:(d<=now.getDate()&&d<=dim)?a:null, prev:d<=pdim?b:null});
+  }
+  return {pts:out, curName:now.toLocaleDateString([],{month:"long"}),
+          prevName:prev.toLocaleDateString([],{month:"long"}),
+          curTotal:a, prevTotal:b, today:now.getDate(),
+          prevToDate:(()=>{let s=0;for(let d=1;d<=Math.min(now.getDate(),pdim);d++)s+=old[d];return s;})()};
+}
+
+function cmpChart(box, M){
+  const pts=M.pts;
+  if(!pts.length){ box.innerHTML='<div class="empty">No cash logged yet.</div>'; return; }
+  const W=Math.max(320,box.clientWidth), H=250, P={l:56,r:16,t:16,b:30};
+  const max=niceMax(Math.max(1,...pts.map(p=>Math.max(p.cur||0,p.prev||0))));
+  const X=i=>P.l+i*(W-P.l-P.r)/(pts.length-1), Y=v=>H-P.b-(v/max)*(H-P.t-P.b);
+  let g="";
+  for(let i=0;i<=4;i++){
+    const v=max*i/4, y=Y(v);
+    g+=`<line x1="${P.l}" y1="${y}" x2="${W-P.r}" y2="${y}" stroke="${CO.stroke}"/>`;
+    g+=`<text x="${P.l-10}" y="${y+4}" fill="${CO.dim}" font-size="11" text-anchor="end">$${v/1000}k</text>`;
+  }
+  pts.forEach((p,i)=>{ if((i+1)%5===0||i===0)
+    g+=`<text x="${X(i)}" y="${H-9}" fill="${CO.dim}" font-size="11" text-anchor="middle">${p.label}</text>`; });
+  const line=(key,col,dash)=>{
+    const seg=pts.map((p,i)=>p[key]===null?null:X(i)+","+Y(p[key])).filter(Boolean).join(" ");
+    if(!seg) return "";
+    return `<polyline class="ln" points="${seg}" fill="none" stroke="${col}" stroke-width="2.6"
+      ${dash?'stroke-dasharray="6 6" opacity=".75"':''} stroke-linecap="round" stroke-linejoin="round"/>`;
+  };
+  let s=line("prev",CO.dim,true)+line("cur",CO.cyan,false);
+  const li=pts.map((p,i)=>p.cur!==null?i:-1).filter(i=>i>=0).pop();
+  if(li!==undefined) s+=`<circle cx="${X(li)}" cy="${Y(pts[li].cur)}" r="4.5" fill="${CO.cyan}"/>`;
+  box.innerHTML=`<svg width="${W}" height="${H}" style="max-width:100%;overflow:visible">${g}${s}</svg>
+    <div class="legend"><span><i style="background:${CO.cyan}"></i>${esc(M.curName)} ${money(M.curTotal)}</span>
+    <span><i style="background:${CO.dim}"></i>${esc(M.prevName)} ${money(M.prevTotal)}</span></div>`;
+  if(REDUCE) return;
+  box.querySelectorAll(".ln").forEach(pl=>{
+    const L=pl.getTotalLength(), keep=pl.getAttribute("stroke-dasharray");
+    pl.style.strokeDasharray=L; pl.style.strokeDashoffset=L; pl.getBoundingClientRect();
+    pl.style.transition="stroke-dashoffset 1.2s var(--ease)"; pl.style.strokeDashoffset=0;
+    if(keep) setTimeout(()=>{pl.style.strokeDasharray=keep;},1250);
+  });
+}
+
 function colChart(box, pts, color){
   if(!pts.length){ box.innerHTML='<div class="empty">No registrations in this range.</div>'; return; }
   const W=Math.max(320,box.clientWidth), H=200, P={l:42,r:12,t:14,b:26};
@@ -1088,13 +1190,13 @@ function colChart(box, pts, color){
 const KEY = "locumos_state_v2";
 const S = {
   closer:[], setter:[], post:[], dm:[], web:[], regEmails:new Set(), tab:"team",
-  from:"", to:"", closerPick:"All", setterPick:"All", dmPick:"All", rangeTouched:false, live:false, goal:0,
+  from:"", to:"", closerPick:"All", setterPick:"All", dmPick:"All", rangeTouched:false, live:false, goal:0, instal:2500, perPlan:4, preset:"",
   urls:{closer:gviz(IDS.closer), setter:gviz(IDS.setter), post:gviz(IDS.post), dm:gviz(IDS.dm), web:gviz(IDS.web)}
 };
 function save(){
   try{ localStorage.setItem(KEY, JSON.stringify({
     tab:S.tab, from:S.from, to:S.to, closerPick:S.closerPick, setterPick:S.setterPick, dmPick:S.dmPick,
-    rangeTouched:S.rangeTouched, goal:S.goal, urls:S.urls })); }catch(e){}
+    rangeTouched:S.rangeTouched, goal:S.goal, instal:S.instal, perPlan:S.perPlan, preset:S.preset, urls:S.urls })); }catch(e){}
 }
 function restore(){
   try{
@@ -1105,12 +1207,26 @@ function restore(){
     if(s.dmPick) S.dmPick=s.dmPick;
     if(s.urls) S.urls=s.urls;
     if(s.goal) S.goal=+s.goal||0;
+    if(s.instal) S.instal=+s.instal||2500;
+    if(s.perPlan) S.perPlan=+s.perPlan||4;
+    if(s.preset) S.preset=s.preset;
     if(s.rangeTouched){ S.rangeTouched=true; S.from=s.from||""; S.to=s.to||""; }
   }catch(e){}
 }
 
 function applyData(c,s,p,m,wb){
-  S.closer = shape(toObjects(c), CLOSER_MAP);
+  S.closer = shape(toObjects(c), CLOSER_MAP).map(r=>{
+    if(r.rebill > 0){
+      // Rebill box filled in: Cash Collected is new-deal money, so banked = cash + rebill.
+      r.cash = r.cash + r.rebill;
+    } else if(!(r.deposits > 0)){
+      // Box left blank: cash with no new revenue behind it is a rebill sitting inside Cash Collected.
+      if(r.revenue <= 0 && r.cash > 0){ r.rebill = r.cash; r._inferred = true; }
+      else if(r.revenue > 0 && r.cash > r.revenue){ r.rebill = r.cash - r.revenue; r._inferred = true; }
+    }
+    r.newCash = Math.max(0, (r.cash||0) - (r.rebill||0));   // money against deals closed that day
+    return r;
+  });
   S.setter = shape(toObjects(s), SETTER_MAP);
   S.post   = shape(toObjects(p), POST_MAP, POST_NUM)
                .sort((a,b)=> (b._date?b._date.getTime():0) - (a._date?a._date.getTime():0));
@@ -1169,6 +1285,7 @@ const stat = (label,value,opts={}) =>
      <div class="v tnum"${opts.tone?` style="color:${opts.tone}"`:""}${
        opts.n!==undefined&&opts.n!==null?` data-n="${opts.n}" data-fmt="${opts.fmt||'num'}"`:""
      }>${opts.n!==undefined&&opts.n!==null?"0":esc(value)}</div>
+     ${opts.sub?`<div class="lbl" style="margin-top:3px">${esc(opts.sub)}</div>`:""}
    </div>`;
 const card = (title,note,inner,flush,delay=0) =>
   `<section class="card in" style="animation-delay:${delay}ms">
@@ -1198,6 +1315,33 @@ function callRow(r){
       <div class="lbl">${r._date? r._date.toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}) : ""}</div>
       <div class="cash tnum" style="color:${r.cash>0?CO.cyan:CO.dim}">${money(r.cash)}</div>
     </div></div>`;
+}
+
+function recurringCard(rows, delay){
+  const R = recurring(rows, S.instal, S.perPlan);
+  const rowsHtml = R.months.length
+    ? R.months.map((m,i)=>`<div class="lb"><div class="who">${esc(m.label)}</div>
+        <div class="track"><div class="fill" data-w="${Math.max((m.v/Math.max(...R.months.map(x=>x.v)))*100,2)}"
+          style="transition-delay:${i*70}ms;background:linear-gradient(90deg,${CO.violet}66,${CO.violet})"></div></div>
+        <div class="v tnum">${money(m.v)}</div></div>`).join("")
+    : '<div class="empty">No outstanding balances. Every closed deal is paid in full.</div>';
+  return card("Expected recurring revenue",
+    R.planRows + " days with a balance owed",
+    `<div class="tiles c5">`+[
+      stat("Outstanding balance","",{n:R.outstanding, fmt:"money", tone:CO.amber}),
+      stat("Due next month","",{n:R.next1, fmt:"money", tone:CO.cyan}),
+      stat("Next 3 months","",{n:R.next3, fmt:"money"}),
+      stat("Next 6 months","",{n:R.next6, fmt:"money", accent:true}),
+      stat("Months to clear","",{n:R.months.length})
+    ].join("")+`</div>
+    <div style="margin-top:20px">${rowsHtml}</div>
+    ${R.overdue>0 ? `<div class="collkey"><span style="color:${CO.coral}">${money(R.overdue)} was scheduled for months already past — either collected late or missed</span></div>` : ""}
+    <div class="goal">
+      <label>Monthly instalment <input class="goalin tnum" id="instal" type="number" min="100" step="100" value="${S.instal}"></label>
+      <label>Payments per plan <input class="goalin tnum" id="perPlan" type="number" min="2" max="12" value="${S.perPlan}"></label>
+      <span class="note">Worked out from Total Revenue minus Cash Collected on each day, spread monthly from the close.
+        Paid-in-full deals never appear here — nothing is owed on them.</span>
+    </div>`, false, delay);
 }
 
 function forecastCard(rows, delay, withGoal){
@@ -1249,6 +1393,15 @@ function render(){
     const sboard=namesOf(S.setter).map(n=>({name:n,...setterStats(sIn.filter(r=>r.name===n))}))
       .filter(r=>r.sets||r.dials).sort((a,b)=>b.sets-a.sets);
     const latest=pIn[0];
+    const M = monthCompare(S.closer);
+    const RR = recurring(S.closer, S.instal, S.perPlan);
+    const thisMonthKey = (()=>{const n=new Date();return n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0");})();
+    const rebillsNow = (RR.months.find(x=>x.key===thisMonthKey)||{v:0}).v;
+    const monthRows = S.closer.filter(r=>r._date && r._key.slice(0,7)===thisMonthKey);
+    const newRevMonth = monthRows.reduce((a,r)=>a+(r.revenue||0),0);
+    const rebillLogged = monthRows.reduce((a,r)=>a+(r.rebill||0),0);
+    const inferredRows = monthRows.filter(r=>r._inferred);
+    const inferred = inferredRows.reduce((a,r)=>a+(r.rebill||0),0);
 
     view.innerHTML =
       `<section class="card heroCard in">
@@ -1256,18 +1409,18 @@ function render(){
           <div class="figure">
             <div class="lbl">Cash collected</div>
             <div class="big tnum" data-n="${cs.cash}" data-fmt="money">0</div>
-            <div class="lbl sub2">${pct(cs.cash,cs.revenue)} of everything signed, actually banked</div>
+            <div class="lbl sub2">${pct(cs.newCash,cs.revenue)} of everything signed, actually banked${cs.rebill?" \u00b7 includes "+money(cs.rebill)+" of rebills":""}</div>
           </div>
           <div class="figure right">
             <div class="lbl">Revenue contracted</div>
             <div class="big gold tnum" data-n="${cs.revenue}" data-fmt="money">0</div>
-            <div class="lbl sub2"><span style="color:var(--amber);font-weight:600">${money(cs.revenue-cs.cash)}</span> still to collect</div>
+            <div class="lbl sub2"><span style="color:var(--amber);font-weight:600">${money(Math.max(0,cs.revenue-cs.newCash))}</span> still to collect</div>
           </div>
         </div>
-        <div class="collbar"><div class="collfill" data-w="${cs.revenue?Math.min(100,(cs.cash/cs.revenue)*100):0}"></div></div>
+        <div class="collbar"><div class="collfill" data-w="${cs.revenue?Math.min(100,(cs.newCash/cs.revenue)*100):0}"></div></div>
         <div class="collkey">
-          <span><i style="background:${CO.cyan}"></i>Collected ${money(cs.cash)}</span>
-          <span><i style="background:rgba(242,180,65,.55)"></i>Outstanding ${money(cs.revenue-cs.cash)}</span>
+          <span><i style="background:${CO.cyan}"></i>Collected ${money(cs.newCash)}</span>
+          <span><i style="background:rgba(242,180,65,.55)"></i>Outstanding ${money(Math.max(0,cs.revenue-cs.newCash))}</span>
         </div>
         <div class="mini-row">
           <div class="mini"><div class="lbl">Closes</div><div class="val tnum" data-n="${cs.closed}" data-fmt="num">0</div></div>
@@ -1277,9 +1430,20 @@ function render(){
           <div class="mini"><div class="lbl">Avg collected per deal</div><div class="val tnum" data-n="${cs.closed?cs.cash/cs.closed:0}" data-fmt="money">0</div></div>
         </div>
         <div id="ch1" style="margin-top:14px"></div>
+        <div class="collkey"><span>Cash collected by day of month, this month against last</span>
+        <span>${M.prevToDate? (M.curTotal>=M.prevToDate ? money(M.curTotal-M.prevToDate)+" ahead of where you were on day "+M.today : money(M.prevToDate-M.curTotal)+" behind day "+M.today+" last month") : ""}</span></div>
       </section>` +
       (latest ? card("Most recent call", ago(latest._date), `<div class="calls" style="margin:-16px -19px -19px">${callRow(latest)}</div>`, false, D()) : "") +
       forecastCard(cIn, D(), true) +
+      card(M.curName + " so far", "New business plus rebills already committed", `<div class="tiles c4">`+[
+        stat("New contracts signed","",{n:newRevMonth, fmt:"money"}),
+        stat("Rebills due this month","",{n:rebillsNow, fmt:"money", tone:CO.violet}),
+        stat("Total expected this month","",{n:newRevMonth+rebillsNow, fmt:"money", accent:true}),
+        stat("Cash banked this month","",{n:M.curTotal, fmt:"money", tone:CO.cyan, sub:"incl. "+money(rebillLogged)+" rebills"})
+      ].join("")+`</div>
+      <div class="collkey"><span>Rebills are instalments from deals closed in earlier months, so they never show as new closes.</span>
+      ${inferred>0 ? `<span style="color:${CO.violet}">${money(inferred)} read as rebills from days with cash but no
+        new revenue (${inferredRows.map(r=>r._key.slice(5)).join(", ")}). Fill the rebill box in and your number is used instead.</span>` : ""}</div>`, false, D()) +
       card("Pipeline, first dial to signed","Setter activity feeding closer results", funnel([
         {label:"Dials",value:ss.dials},{label:"Connections",value:ss.connections},
         {label:"Qualified convos",value:ss.qualConvos},{label:"Sets booked",value:ss.sets+ds.sets},
@@ -1291,7 +1455,7 @@ function render(){
         stat("Offer rate", pct(cs.offers,cs.showed), {n:pctN(cs.offers,cs.showed), fmt:"pct"}),
         stat("Close rate", pct(cs.closed,cs.showed), {n:pctN(cs.closed,cs.showed), fmt:"pct"}),
         stat("Offer to close", pct(cs.closed,cs.offers), {n:pctN(cs.closed,cs.offers), fmt:"pct"}),
-        stat("Cash collection", pct(cs.cash,cs.revenue), {n:pctN(cs.cash,cs.revenue), fmt:"pct"}),
+        stat("Cash collection", pct(cs.newCash,cs.revenue), {n:pctN(cs.newCash,cs.revenue), fmt:"pct"}),
         stat("Cash per call showed", cs.showed?money(cs.cash/cs.showed):"—", {n:cs.showed?cs.cash/cs.showed:null, fmt:"money", tone:CO.cyan}),
         stat("Connect rate", pct(ss.connections,ss.dials), {n:pctN(ss.connections,ss.dials), fmt:"pct"}),
         stat("Convo to set", pct(ss.sets,ss.connections), {n:pctN(ss.sets,ss.connections), fmt:"pct"}),
@@ -1311,10 +1475,11 @@ function render(){
       card("Latest calls", pIn.length+" in this range",
         `<div class="calls">${pIn.slice(0,6).map(callRow).join("") || '<div class="empty">No calls logged in this range.</div>'}</div>`,
         true, D()) +
+      recurringCard(cIn, D()) +
       `<p class="foot in" style="animation-delay:${D()}ms">Team cash and revenue come from the closer EOD sheet so the same deal is never
        counted twice. The post-call form feeds the calls feed and outcome mix.</p>`;
 
-    after.push(()=>lineChart(document.getElementById("ch1"), timeline(cIn)));
+    after.push(()=>cmpChart(document.getElementById("ch1"), M));
     after.push(()=>{ const b=document.getElementById("chF"); const f=forecast(cIn); if(b&&f) projChart(b,f,S.goal); });
     after.push(()=>donut(document.getElementById("ch2"), objections([...cIn,...sIn])));
     after.push(()=>donut(document.getElementById("ch3"), statusCounts(pIn)));
@@ -1339,6 +1504,7 @@ function render(){
           stat("Followups / dials","",{n:c1.followups}),
           stat("Cash collected","",{n:c1.cash, fmt:"money", tone:CO.cyan}),
           stat("Revenue contracted","",{n:c1.revenue, fmt:"money"}),
+          stat("Of which rebills","",{n:c1.rebill||0, fmt:"money", tone:CO.violet}),
           stat("Avg day rating","—",{n:c1.rate, fmt:"rating", accent:true})
         ].join("")+`</div>`, false, D()) +
       forecastCard(sel, D(), false) +
@@ -1350,7 +1516,7 @@ function render(){
         stat("Cash per call booked", c1.callsBooked?money2(c1.cash/c1.callsBooked):"—", {n:c1.callsBooked?c1.cash/c1.callsBooked:null, fmt:"money2"}),
         stat("Cash per call showed", c1.showed?money2(c1.cash/c1.showed):"—", {n:c1.showed?c1.cash/c1.showed:null, fmt:"money2"}),
         stat("Cash per close", c1.closed?money2(c1.cash/c1.closed):"—", {n:c1.closed?c1.cash/c1.closed:null, fmt:"money2"}),
-        stat("Cash collection rate", pct(c1.cash,c1.revenue), {n:pctN(c1.cash,c1.revenue), fmt:"pct"})
+        stat("Cash collection rate", pct(c1.newCash,c1.revenue), {n:pctN(c1.newCash,c1.revenue), fmt:"pct"})
       ].join("")+`</div>`, false, D()) +
       `<div class="two">
         ${card("Cash and revenue by day","",'<div id="ch1"></div>', false, D())}
@@ -1631,15 +1797,38 @@ document.getElementById("view").addEventListener("click", e=>{
 });
 document.getElementById("view").addEventListener("change", e=>{
   if(e.target.id === "goal"){ S.goal = Math.max(0, +e.target.value||0); save(); render(); }
+  if(e.target.id === "instal"){ S.instal = Math.max(100, +e.target.value||2500); save(); render(); }
+  if(e.target.id === "perPlan"){ S.perPlan = Math.max(2, +e.target.value||4); save(); render(); }
 });
-document.getElementById("from").addEventListener("change", e=>{ S.from=e.target.value; S.rangeTouched=true; save(); render(); });
-document.getElementById("to").addEventListener("change", e=>{ S.to=e.target.value; S.rangeTouched=true; save(); render(); });
+document.getElementById("from").addEventListener("change", e=>{ S.from=e.target.value; S.rangeTouched=true; S.preset=""; markPreset(); save(); render(); });
+document.getElementById("to").addEventListener("change", e=>{ S.to=e.target.value; S.rangeTouched=true; S.preset=""; markPreset(); save(); render(); });
+function applyPreset(kind){
+  const now = new Date(), D = x => dkey(x);
+  let f, t;
+  if(kind==="yesterday"){ const y=new Date(now); y.setDate(y.getDate()-1); f=t=D(y); }
+  else if(kind==="7"){ const s=new Date(now); s.setDate(s.getDate()-6); f=D(s); t=D(now); }
+  else if(kind==="30"){ const s=new Date(now); s.setDate(s.getDate()-29); f=D(s); t=D(now); }
+  else if(kind==="thismonth"){ f=D(new Date(now.getFullYear(),now.getMonth(),1)); t=D(now); }
+  else if(kind==="lastmonth"){ f=D(new Date(now.getFullYear(),now.getMonth()-1,1));
+                               t=D(new Date(now.getFullYear(),now.getMonth(),0)); }
+  else return;
+  S.from=f; S.to=t; S.rangeTouched=true; S.preset=kind;
+  document.getElementById("from").value=f; document.getElementById("to").value=t;
+  markPreset(); save(); render();
+}
+function markPreset(){
+  document.querySelectorAll(".presets .btn").forEach(b=>
+    b.classList.toggle("on", !!b.dataset.preset && b.dataset.preset===S.preset));
+}
+document.querySelectorAll(".presets .btn[data-preset]").forEach(b=>
+  b.addEventListener("click", ()=>applyPreset(b.dataset.preset)));
 document.getElementById("allTime").addEventListener("click", ()=>{
+  S.preset="";
   S.rangeTouched=false;
   const days=[...S.closer,...S.setter,...S.post,...S.dm,...S.web].map(r=>r._key).filter(Boolean).sort();
   if(days.length){ S.from=days[0]; S.to=days[days.length-1]; }
   document.getElementById("from").value=S.from; document.getElementById("to").value=S.to;
-  save(); render();
+  markPreset(); save(); render();
 });
 document.getElementById("toggleSetup").addEventListener("click", e=>{
   const p=document.getElementById("setup"); p.classList.toggle("open");
@@ -1659,7 +1848,7 @@ document.getElementById("load").addEventListener("click", ()=>{
 document.getElementById("reset").addEventListener("click", ()=>{
   S.live = false;
   applyData(SNAPSHOT_CLOSER, SNAPSHOT_SETTER, SNAPSHOT_POST, SNAPSHOT_DM, SNAPSHOT_WEB);
-  setStatus("Snapshot · 26 Sep"); render();
+  setStatus("Snapshot · 10 Oct"); render();
 });
 let rt; window.addEventListener("resize", ()=>{
   clearTimeout(rt); rt=setTimeout(()=>{ moveInd(); (window._redraw||[]).forEach(f=>f()); }, 160);
@@ -1684,6 +1873,7 @@ document.getElementById("postUrl").value   = S.urls.post;
 applyData(SNAPSHOT_CLOSER, SNAPSHOT_SETTER, SNAPSHOT_POST, SNAPSHOT_DM, SNAPSHOT_WEB);
 render();
 loadLive();                       // always pull fresh on open
+markPreset();
 requestAnimationFrame(moveInd);
 setTimeout(moveInd, 300);
 setInterval(()=>{ if(S.live) loadLive(); }, 300000);
