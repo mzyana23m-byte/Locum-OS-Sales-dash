@@ -1427,7 +1427,7 @@ function render(){
           <div class="mini"><div class="lbl">Calls taken</div><div class="val tnum" data-n="${cs.showed}" data-fmt="num">0</div></div>
           <div class="mini"><div class="lbl">Sets booked</div><div class="val tnum" data-n="${ss.sets+ds.sets}" data-fmt="num">0</div></div>
           <div class="mini"><div class="lbl">Avg deal size</div><div class="val tnum" data-n="${cs.closed?cs.revenue/cs.closed:0}" data-fmt="money">0</div></div>
-          <div class="mini"><div class="lbl">Avg collected per deal</div><div class="val tnum" data-n="${cs.closed?cs.cash/cs.closed:0}" data-fmt="money">0</div></div>
+          <div class="mini"><div class="lbl">Avg collected per deal</div><div class="val tnum" data-n="${cs.closed?cs.newCash/cs.closed:0}" data-fmt="money">0</div></div>
         </div>
         <div id="ch1" style="margin-top:14px"></div>
         <div class="collkey"><span>Cash collected by day of month, this month against last</span>
@@ -1456,7 +1456,7 @@ function render(){
         stat("Close rate", pct(cs.closed,cs.showed), {n:pctN(cs.closed,cs.showed), fmt:"pct"}),
         stat("Offer to close", pct(cs.closed,cs.offers), {n:pctN(cs.closed,cs.offers), fmt:"pct"}),
         stat("Cash collection", pct(cs.newCash,cs.revenue), {n:pctN(cs.newCash,cs.revenue), fmt:"pct"}),
-        stat("Cash per call showed", cs.showed?money(cs.cash/cs.showed):"—", {n:cs.showed?cs.cash/cs.showed:null, fmt:"money", tone:CO.cyan}),
+        stat("Cash per call showed", cs.showed?money(cs.newCash/cs.showed):"—", {n:cs.showed?cs.newCash/cs.showed:null, fmt:"money", tone:CO.cyan}),
         stat("Connect rate", pct(ss.connections,ss.dials), {n:pctN(ss.connections,ss.dials), fmt:"pct"}),
         stat("Convo to set", pct(ss.sets,ss.connections), {n:pctN(ss.sets,ss.connections), fmt:"pct"}),
         stat("Qualified to set", pct(ss.sets,ss.qualConvos), {n:pctN(ss.sets,ss.qualConvos), fmt:"pct"}),
@@ -1502,9 +1502,9 @@ function render(){
           stat("Deposits","",{n:c1.deposits}),
           stat("Closed","",{n:c1.closed}),
           stat("Followups / dials","",{n:c1.followups}),
-          stat("Cash collected","",{n:c1.cash, fmt:"money", tone:CO.cyan}),
+          stat("Cash banked","",{n:c1.cash, fmt:"money", tone:CO.cyan, sub:c1.rebill?"incl. "+money(c1.rebill)+" rebills":""}),
+          stat("New-deal cash","",{n:c1.newCash, fmt:"money"}),
           stat("Revenue contracted","",{n:c1.revenue, fmt:"money"}),
-          stat("Of which rebills","",{n:c1.rebill||0, fmt:"money", tone:CO.violet}),
           stat("Avg day rating","—",{n:c1.rate, fmt:"rating", accent:true})
         ].join("")+`</div>`, false, D()) +
       forecastCard(sel, D(), false) +
@@ -1513,9 +1513,9 @@ function render(){
         stat("Offer rate", pct(c1.offers,c1.showed), {n:pctN(c1.offers,c1.showed), fmt:"pct"}),
         stat("Close rate", pct(c1.closed,c1.showed), {n:pctN(c1.closed,c1.showed), fmt:"pct"}),
         stat("Offer to close", pct(c1.closed,c1.offers), {n:pctN(c1.closed,c1.offers), fmt:"pct"}),
-        stat("Cash per call booked", c1.callsBooked?money2(c1.cash/c1.callsBooked):"—", {n:c1.callsBooked?c1.cash/c1.callsBooked:null, fmt:"money2"}),
-        stat("Cash per call showed", c1.showed?money2(c1.cash/c1.showed):"—", {n:c1.showed?c1.cash/c1.showed:null, fmt:"money2"}),
-        stat("Cash per close", c1.closed?money2(c1.cash/c1.closed):"—", {n:c1.closed?c1.cash/c1.closed:null, fmt:"money2"}),
+        stat("Cash per call booked", c1.callsBooked?money2(c1.newCash/c1.callsBooked):"—", {n:c1.callsBooked?c1.newCash/c1.callsBooked:null, fmt:"money2"}),
+        stat("Cash per call showed", c1.showed?money2(c1.newCash/c1.showed):"—", {n:c1.showed?c1.newCash/c1.showed:null, fmt:"money2"}),
+        stat("Cash per close", c1.closed?money2(c1.newCash/c1.closed):"—", {n:c1.closed?c1.newCash/c1.closed:null, fmt:"money2"}),
         stat("Cash collection rate", pct(c1.newCash,c1.revenue), {n:pctN(c1.newCash,c1.revenue), fmt:"pct"})
       ].join("")+`</div>`, false, D()) +
       `<div class="two">
