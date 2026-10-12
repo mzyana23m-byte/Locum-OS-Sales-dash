@@ -849,13 +849,13 @@ const DM_MAP = {
   cash:["cashcollected","cash"], revenue:["totalrevenue","revenue"],
   rate:["ratetoday","ratetodayfrom110","rate"], objection:["whatobjections","objections","objection"]
 };
-const DM_NUM = new Set(["leads","qualConvos","links","sets","callsBooked","live","closes","downsells","cash","revenue","rate"]);
+const DM_NUM = new Set(["rebill","newCash","leads","qualConvos","links","sets","callsBooked","live","closes","downsells","cash","revenue","rate"]);
 const dmStats = r => ({entries:r.length, leads:sum(r,"leads"), qualConvos:sum(r,"qualConvos"), links:sum(r,"links"),
   sets:sum(r,"sets"), callsBooked:sum(r,"callsBooked"), live:sum(r,"live"), closes:sum(r,"closes"),
-  downsells:sum(r,"downsells"), cash:sum(r,"cash"), revenue:sum(r,"revenue"), rate:avgRate(r)});
+  downsells:sum(r,"downsells"), cash:sum(r,"cash"), revenue:sum(r,"revenue"), newCash:sum(r,"newCash"), rebill:sum(r,"rebill"), rate:avgRate(r)});
 
 const NUMERIC = new Set(["callsBooked","showed","noShows","reschedules","qualified","offers","deposits","closed",
-  "followups","cash","revenue","rate","rebill","dials","connections","qualConvos","sets","closedSets"]);
+  "followups","cash","revenue","rate","rebill","newCash","dials","connections","qualConvos","sets","closedSets"]);
 
 function shape(rows,map,numeric){
   if(!rows.length) return [];
@@ -883,7 +883,7 @@ const closerStats = r => ({entries:r.length, callsBooked:sum(r,"callsBooked"), s
   revenue:sum(r,"revenue"), rebill:sum(r,"rebill"), newCash:sum(r,"newCash"), rate:avgRate(r)});
 const setterStats = r => ({entries:r.length, dials:sum(r,"dials"), connections:sum(r,"connections"),
   qualConvos:sum(r,"qualConvos"), sets:sum(r,"sets"), callsBooked:sum(r,"callsBooked"), showed:sum(r,"showed"),
-  closedSets:sum(r,"closedSets"), cash:sum(r,"cash"), revenue:sum(r,"revenue"), rate:avgRate(r)});
+  closedSets:sum(r,"closedSets"), cash:sum(r,"cash"), revenue:sum(r,"revenue"), newCash:sum(r,"newCash"), rebill:sum(r,"rebill"), rate:avgRate(r)});
 function timeline(rows){
   const by={};
   rows.forEach(r=>{ if(!r._key) return;
@@ -1301,23 +1301,24 @@ function restore(){
   }catch(e){}
 }
 
-function applyData(c,s,p,m,wb){
-  S.closer = shape(toObjects(c), CLOSER_MAP).map(r=>{
-    if(r.rebill > 0){
-      // Rebill box filled in: Cash Collected is new-deal money, so banked = cash + rebill.
-      r.cash = r.cash + r.rebill;
-    } else if(!(r.deposits > 0)){
-      // Box left blank: cash with no new revenue behind it is a rebill sitting inside Cash Collected.
+function normaliseCash(rows){
+  return rows.map(r=>{
+    if(r.rebill > 0){ r.cash = r.cash + r.rebill; }
+    else if(!(r.deposits > 0)){
       if(r.revenue <= 0 && r.cash > 0){ r.rebill = r.cash; r._inferred = true; }
       else if(r.revenue > 0 && r.cash > r.revenue){ r.rebill = r.cash - r.revenue; r._inferred = true; }
     }
-    r.newCash = Math.max(0, (r.cash||0) - (r.rebill||0));   // money against deals closed that day
+    r.newCash = Math.max(0, (r.cash||0) - (r.rebill||0));
     return r;
   });
-  S.setter = shape(toObjects(s), SETTER_MAP);
+}
+
+function applyData(c,s,p,m,wb){
+  S.closer = normaliseCash(shape(toObjects(c), CLOSER_MAP));
+  S.setter = normaliseCash(shape(toObjects(s), SETTER_MAP));
   S.post   = shape(toObjects(p), POST_MAP, POST_NUM)
                .sort((a,b)=> (b._date?b._date.getTime():0) - (a._date?a._date.getTime():0));
-  S.dm     = shape(toObjects(m||SNAPSHOT_DM), DM_MAP, DM_NUM);
+  S.dm     = normaliseCash(shape(toObjects(m||SNAPSHOT_DM), DM_MAP, DM_NUM));
   S.web    = shape(toObjects(wb||SNAPSHOT_WEB), WEB_MAP, WEB_NUM);
   S.regEmails = new Set(S.web.map(r=>(r.email||"").toLowerCase().trim()).filter(Boolean));
   if(!S.rangeTouched){
@@ -1483,6 +1484,14 @@ function rangeLabel(){
        + new Date(S.to+"T00:00:00").toLocaleDateString([], {day:"numeric", month:"short"});
 }
 
+function headline(title, figs){
+  return `<section class="card heroCard in"><div class="heroMonth">${esc(title)}</div>
+    <div class="heroTop">${figs.map(f=>`<div class="figure${f.lead?" lead":""}">
+      <div class="lbl">${esc(f.label)}</div>
+      <div class="num ${f.cls||""} tnum" data-n="${f.n||0}" data-fmt="${f.fmt||"money"}">0</div>
+      <div class="lbl sub2">${esc(f.sub||"")}</div></div>`).join("")}</div></section>`;
+}
+
 function render(){
   const cIn=S.closer.filter(inRange), sIn=S.setter.filter(inRange), pIn=S.post.filter(inRange);
   const view=document.getElementById("view"); const after=[];
@@ -1600,6 +1609,12 @@ function render(){
     const c1 = closerStats(sel);
     view.innerHTML =
       repBar("Closer", namesOf(S.closer), S.closerPick, "closer") +
+      headline((S.closerPick==="All"?"All closers":S.closerPick)+" \u00b7 "+rangeLabel(), [
+        {label:"Cash collected", n:c1.newCash, sub:"from deals closed in this range"},
+        {label:"Rebills", n:c1.rebill||0, cls:"violet", sub:"instalments from earlier deals"},
+        {label:"Total cash collected", n:c1.cash, cls:"cyan", lead:true, sub:"everything banked"},
+        {label:"Revenue signed", n:c1.revenue, cls:"gold", sub:c1.closed+" deal"+(c1.closed===1?"":"s")+" closed"}
+      ]) +
       card((S.closerPick==="All"?"All closers":S.closerPick)+" — volume", c1.entries+" end-of-day reports",
         `<div class="tiles">`+[
           stat("Calls on calendar","",{n:c1.callsBooked}),
@@ -1611,8 +1626,6 @@ function render(){
           stat("Deposits","",{n:c1.deposits}),
           stat("Closed","",{n:c1.closed}),
           stat("Followups / dials","",{n:c1.followups}),
-          stat("Cash banked","",{n:c1.cash, fmt:"money", tone:CO.cyan, sub:c1.rebill?"incl. "+money(c1.rebill)+" rebills":""}),
-          stat("New-deal cash","",{n:c1.newCash, fmt:"money"}),
           stat("Revenue contracted","",{n:c1.revenue, fmt:"money"}),
           stat("Avg day rating","—",{n:c1.rate, fmt:"rating", accent:true})
         ].join("")+`</div>`, false, D()) +
@@ -1650,6 +1663,12 @@ function render(){
     const s1 = setterStats(sel);
     view.innerHTML =
       repBar("Setter", namesOf(S.setter), S.setterPick, "setter") +
+      headline((S.setterPick==="All"?"All setters":S.setterPick)+" \u00b7 "+rangeLabel(), [
+        {label:"Cash produced", n:s1.newCash, cls:"cyan", lead:true, sub:"from sets that closed"},
+        {label:"Revenue produced", n:s1.revenue, cls:"gold", sub:s1.closedSets+" set"+(s1.closedSets===1?"":"s")+" closed"},
+        {label:"Sets booked", n:s1.sets, fmt:"num", sub:"from "+num(s1.dials)+" dials"},
+        {label:"Cash per set", n:s1.sets?s1.newCash/s1.sets:0, sub:"average value of a booking"}
+      ]) +
       card((S.setterPick==="All"?"All setters":S.setterPick)+" — activity", s1.entries+" end-of-day reports",
         `<div class="tiles c5">`+[
           stat("Dials","",{n:s1.dials}),
@@ -1659,7 +1678,7 @@ function render(){
           stat("Calls on calendar","",{n:s1.callsBooked}),
           stat("Calls showed","",{n:s1.showed}),
           stat("Sets that closed","",{n:s1.closedSets}),
-          stat("Cash produced","",{n:s1.cash, fmt:"money", tone:CO.cyan}),
+          stat("Cash produced","",{n:s1.newCash, fmt:"money", tone:CO.cyan}),
           stat("Revenue produced","",{n:s1.revenue, fmt:"money"}),
           stat("Avg day rating","—",{n:s1.rate, fmt:"rating", accent:true})
         ].join("")+`</div>`, false, D()) +
@@ -1669,9 +1688,9 @@ function render(){
         stat("Qualified to set", pct(s1.sets,s1.qualConvos), {n:pctN(s1.sets,s1.qualConvos), fmt:"pct"}),
         stat("Set to close", pct(s1.closedSets,s1.sets), {n:pctN(s1.closedSets,s1.sets), fmt:"pct"}),
         stat("Showed to close", pct(s1.closedSets,s1.showed), {n:pctN(s1.closedSets,s1.showed), fmt:"pct"}),
-        stat("Cash per set", s1.sets?money2(s1.cash/s1.sets):"—", {n:s1.sets?s1.cash/s1.sets:null, fmt:"money2"}),
-        stat("Cash per call showed", s1.showed?money2(s1.cash/s1.showed):"—", {n:s1.showed?s1.cash/s1.showed:null, fmt:"money2"}),
-        stat("Cash collection rate", pct(s1.cash,s1.revenue), {n:pctN(s1.cash,s1.revenue), fmt:"pct"})
+        stat("Cash per set", s1.sets?money2(s1.newCash/s1.sets):"—", {n:s1.sets?s1.newCash/s1.sets:null, fmt:"money2"}),
+        stat("Cash per call showed", s1.showed?money2(s1.newCash/s1.showed):"—", {n:s1.showed?s1.newCash/s1.showed:null, fmt:"money2"}),
+        stat("Cash collection rate", pct(s1.newCash,s1.revenue), {n:pctN(s1.newCash,s1.revenue), fmt:"pct"})
       ].join("")+`</div>`, false, D()) +
       `<div class="two">
         ${card("Cash and revenue by day","",'<div id="ch1"></div>', false, D())}
@@ -1698,6 +1717,12 @@ function render(){
       (S.dm.length ? "" : card("", "", `<div class="empty">No DM setter EODs submitted yet.<br>
         <span style="font-size:12.5px">This tab fills in the moment the first one lands in
         <strong>Locum OS - DM Setter EOD</strong>.</span></div>`, false, 0)) +
+      headline((S.dmPick==="All"?"All DM setters":S.dmPick)+" \u00b7 "+rangeLabel(), [
+        {label:"Cash produced", n:d1.newCash||0, cls:"cyan", lead:true, sub:"from sets that closed"},
+        {label:"Revenue produced", n:d1.revenue, cls:"gold", sub:d1.closes+" close"+(d1.closes===1?"":"s")},
+        {label:"Sets booked", n:d1.sets, fmt:"num", sub:"from "+num(d1.leads)+" leads contacted"},
+        {label:"Cash per set", n:d1.sets?(d1.newCash||0)/d1.sets:0, sub:"average value of a booking"}
+      ]) +
       card((S.dmPick==="All"?"All DM setters":S.dmPick)+" — activity", d1.entries+" end-of-day reports",
         `<div class="tiles c5">`+[
           stat("Leads contacted","",{n:d1.leads}),
@@ -1708,7 +1733,7 @@ function render(){
           stat("Live calls","",{n:d1.live}),
           stat("Closes","",{n:d1.closes}),
           stat("Down sells","",{n:d1.downsells}),
-          stat("Cash collected","",{n:d1.cash, fmt:"money", tone:CO.cyan}),
+          stat("Cash collected","",{n:d1.newCash||0, fmt:"money", tone:CO.cyan}),
           stat("Avg day rating","—",{n:d1.rate, fmt:"rating", accent:true})
         ].join("")+`</div>`, false, D()) +
       card("Conversion and cash efficiency","", `<div class="tiles c4">`+[
@@ -1717,9 +1742,9 @@ function render(){
         stat("Link to set", pct(d1.sets,d1.links), {n:pctN(d1.sets,d1.links), fmt:"pct"}),
         stat("Set to close", pct(d1.closes,d1.sets), {n:pctN(d1.closes,d1.sets), fmt:"pct"}),
         stat("Show rate", pct(d1.live,d1.callsBooked), {n:pctN(d1.live,d1.callsBooked), fmt:"pct"}),
-        stat("Cash per set", d1.sets?money2(d1.cash/d1.sets):"—", {n:d1.sets?d1.cash/d1.sets:null, fmt:"money2"}),
-        stat("Cash per close", d1.closes?money2(d1.cash/d1.closes):"—", {n:d1.closes?d1.cash/d1.closes:null, fmt:"money2"}),
-        stat("Cash collection rate", pct(d1.cash,d1.revenue), {n:pctN(d1.cash,d1.revenue), fmt:"pct"})
+        stat("Cash per set", d1.sets?money2((d1.newCash||0)/d1.sets):"—", {n:d1.sets?(d1.newCash||0)/d1.sets:null, fmt:"money2"}),
+        stat("Cash per close", d1.closes?money2((d1.newCash||0)/d1.closes):"—", {n:d1.closes?(d1.newCash||0)/d1.closes:null, fmt:"money2"}),
+        stat("Cash collection rate", pct(d1.newCash||0,d1.revenue), {n:pctN(d1.newCash||0,d1.revenue), fmt:"pct"})
       ].join("")+`</div>`, false, D()) +
       card("DM funnel","Leads through to closes", funnel([
         {label:"Leads contacted",value:d1.leads},{label:"Qualified convos",value:d1.qualConvos},
