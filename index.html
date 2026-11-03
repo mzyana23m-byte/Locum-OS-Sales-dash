@@ -1085,7 +1085,8 @@ function recurring(rows, instal, perPlan){
 function forecast(rows){
   const days = [...new Set(rows.map(r=>r._key).filter(Boolean))].sort();
   if(!days.length) return null;
-  const cash = sum(rows,"cash"), revenue = sum(rows,"revenue"), closed = sum(rows,"closed");
+  const cash = sum(rows,"newCash"), revenue = sum(rows,"revenue"), closed = sum(rows,"closed");
+  const rebillsIn = sum(rows,"rebill");
   const first = new Date(days[0]+"T00:00:00"), last = new Date(days[days.length-1]+"T00:00:00");
   const span = Math.round((last-first)/86400000)+1;
   const reportDays = days.length;
@@ -1100,11 +1101,12 @@ function forecast(rows){
   const workLeft = calLeft*activity;
 
   const monthRows = rows.filter(r=>r._date && r._date.getFullYear()===y && r._date.getMonth()===m);
-  const mtd = sum(monthRows,"cash");
+  const mtd = sum(monthRows,"newCash");
+  const mtdRebills = sum(monthRows,"rebill");
   const mtdCloses = sum(monthRows,"closed");
 
   return {
-    perDay, closesPerDay, activity, reportDays, cash, revenue, closed,
+    perDay, closesPerDay, activity, reportDays, cash, revenue, closed, rebillsIn, mtdRebills,
     perClose: closed ? cash/closed : 0,
     mtd, mtdCloses, calLeft, workLeft, daysInMonth, dayOfMonth, y, m,
     projMonth: mtd + perDay*workLeft,
@@ -1116,7 +1118,7 @@ function forecast(rows){
 
 function projPoints(f){
   const byDay = {};
-  f.monthRows.forEach(r=>{ if(r._key) byDay[r._key] = (byDay[r._key]||0) + (r.cash||0); });
+  f.monthRows.forEach(r=>{ if(r._key) byDay[r._key] = (byDay[r._key]||0) + (r.newCash||0); });
   const keys = Object.keys(byDay).sort();
   const pts = [{label:"1", v:0}];
   let run = 0;
@@ -1437,14 +1439,15 @@ function forecastCard(rows, delay, withGoal){
   if(!f) return "";
   const monthName = new Date(f.y, f.m, 1).toLocaleDateString([], {month:"long"});
   const tiles = `<div class="tiles c4">` + [
-    stat("Cash per day worked","",{n:f.perDay, fmt:"money", tone:CO.cyan}),
+    stat("New-deal cash per day worked","",{n:f.perDay, fmt:"money", tone:CO.cyan}),
     stat("Days reported in range","",{n:f.reportDays}),
-    stat("Cash so far in "+monthName,"",{n:f.mtd, fmt:"money"}),
+    stat("New-deal cash so far in "+monthName,"",{n:f.mtd, fmt:"money"}),
     stat("Days left in "+monthName,"",{n:f.calLeft}),
     stat("Projected "+monthName+" close","",{n:f.projMonth, fmt:"money", accent:true}),
     stat("Expected next 30 days","",{n:f.next30, fmt:"money"}),
     stat("Projected closes by month end","",{n:f.projCloses, fmt:"num"}),
-    stat("Avg cash per close", f.perClose?money(f.perClose):"—", {n:f.perClose||null, fmt:"money"})
+    stat("Avg cash per close", f.perClose?money(f.perClose):"—", {n:f.perClose||null, fmt:"money"}),
+    stat("Rebills banked in "+monthName,"",{n:f.mtdRebills, fmt:"money", tone:CO.violet})
   ].join("") + `</div>`;
 
   let goal = "";
@@ -1465,7 +1468,7 @@ function forecastCard(rows, delay, withGoal){
   }
 
   return card("Pace and forecast",
-    "At " + money(f.perDay) + " a day across " + f.reportDays + " reported days",
+    "New business only, at " + money(f.perDay) + " a day across " + f.reportDays + " reported days. Rebills are forecast separately below.",
     tiles + `<div style="margin-top:18px" id="chF"></div>` + goal, false, delay);
 }
 
